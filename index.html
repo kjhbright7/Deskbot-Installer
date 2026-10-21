@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>DeskPet 웹 설치기</title>
+  <script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
+  <style>
+    body { background: #0f172a; color: #fff; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+    .box { background: #1e293b; padding: 40px; border-radius: 20px; text-align: center; border: 1px solid #334155; max-width: 400px; }
+    h1 { color: #38bdf8; font-size: 22px; margin-bottom: 12px; }
+    p { color: #94a3b8; font-size: 14px; line-height: 1.6; margin-bottom: 24px; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h1>🐾 DeskPet 펌웨어 자동 설치</h1>
+    <p>ESP32-C3 보드를 USB 케이블로 PC에 연결한 뒤<br>아래 파란색 버튼을 눌러주세요.</p>
+    <esp-web-install-button manifest="./manifest.json"></esp-web-install-button>
+  </div>
+</body>
+</html>
