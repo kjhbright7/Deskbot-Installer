@@ -136,8 +136,9 @@
     }
 
     /* 프리셋 4종 그리드 */
-    .preset-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px; }
-    .preset-card {
+/* 4열 -> 5열 그리드로 변경 */ 
+     .preset-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 16px; }
+      .preset-card {
       background: #0f172a;
       border: 2px solid var(--border);
       border-radius: 12px;
@@ -295,7 +296,7 @@
         3.2초마다 눈을 깜빡이는 생동감 있는 표정들입니다. 원하는 표정을 클릭해 보세요.
       </p>
 
-      <div class="preset-grid">
+       <div class="preset-grid">
         <div class="preset-card active" id="cardPreset1" onclick="selectPresetFace(1)">
           <div class="p-emoji">👀</div>
           <h5>기본 동글눈</h5>
@@ -315,6 +316,12 @@
           <div class="p-emoji">^ ω ^</div>
           <h5>귀여운 눈웃음</h5>
           <span>깜빡임 탑재</span>
+        </div>
+        <!-- [신규] 5번째 원조 클래식 표정 -->
+        <div class="preset-card" id="cardPreset5" onclick="selectPresetFace(5)">
+          <div class="p-emoji">🐱</div>
+          <h5>클래식 냥이</h5>
+          <span>원조 깜빡임</span>
         </div>
       </div>
     </div>
@@ -511,7 +518,38 @@
     document.getElementById('toolPen').classList.toggle('active', tool === 'pen');
     document.getElementById('toolEraser').classList.toggle('active', tool === 'eraser');
   }
+// U8g2 drawRBox와 1:1 일치하는 둥근 사각형 렌더러
+  function drawRBox(x, y, w, h, r, color = 1) {
+    for (let py = y; py < y + h; py++) {
+      for (let px = x; px < x + w; px++) {
+        let dx = 0, dy = 0;
+        if (px < x + r && py < y + r) { dx = px - (x + r); dy = py - (y + r); }
+        else if (px >= x + w - r && py < y + r) { dx = px - (x + w - r - 1); dy = py - (y + r); }
+        else if (px < x + r && py >= y + h - r) { dx = px - (x + r); dy = py - (y + h - r - 1); }
+        else if (px >= x + w - r && py >= y + h - r) { dx = px - (x + w - r - 1); dy = py - (y + h - r - 1); }
+        
+        if (dx * dx + dy * dy <= r * r) {
+          if (px >= 0 && px < OLED_W && py >= 0 && py < OLED_H) {
+            oledGrid[py][px] = color;
+          }
+        }
+      }
+    }
+  }
 
+  // 직선 래스터라이저 (수염 그리기용)
+  function drawLine(x0, y0, x1, y1, color = 1) {
+    let dx = Math.abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
+    let dy = -Math.abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
+    let err = dx + dy;
+    while (true) {
+      setPixel(x0, y0, color);
+      if (x0 === x1 && y0 === y1) break;
+      let e2 = 2 * err;
+      if (e2 >= dy) { err += dy; x0 += sx; }
+      if (e2 <= dx) { err += dx; y0 += sy; }
+    }
+  }
   function drawPixelAt(e) {
     const rect = canvas.getBoundingClientRect();
     const x = Math.floor((e.clientX - rect.left) / SCALE);
@@ -696,6 +734,31 @@ else if (mode === 4) {
     drawSafeBlush(96, 33, true);  // 오른쪽 ///
     document.getElementById('syncSummaryText').innerText = "귀여운 눈웃음 표정을 보드에 주입합니다 (깜빡임 지원).";
   }
+else if (mode === 5) {
+      // 5. 클래식 냥이 (원조 둥근네모눈 + 동공 파임 + 볼 수염)
+      // 양쪽 둥근 사각 눈 베이스 (가로 28, 세로 29, 곡률 12)
+      drawRBox(22, 15, 28, 29, 12, 1);
+      drawRBox(78, 15, 28, 29, 12, 1);
+
+      // 동공 하이라이트 파내기 (큰 원 r=6, 작은 원 r=3)
+      drawU8g2Disc(29, 22, 6, 0);
+      drawU8g2Disc(41, 35, 3, 0);
+      drawU8g2Disc(85, 22, 6, 0);
+      drawU8g2Disc(97, 35, 3, 0);
+
+      // 왼쪽 볼 수염 (// 모양)
+      drawLine(16, 44, 20, 39, 1);
+      drawLine(21, 44, 25, 39, 1);
+
+      // 오른쪽 볼 수염 (\\ 모양, 베젤 안쪽 안전 좌표: x=102~111)
+      drawLine(103, 39, 107, 44, 1);
+      drawLine(108, 39, 112, 44, 1);
+
+      // 귀여운 'ㅅ' 입
+      drawCatMouth(64, 43);
+
+      document.getElementById('syncSummaryText').innerText = "클래식 냥이(원조 둥근네모눈) 표정을 보드에 주입합니다 (깜빡임 지원).";
+    }
 
     renderOledGrid();
   }
