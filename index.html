@@ -615,19 +615,20 @@
  
 
   // 케이스 베젤에 닿지 않는 안전 영역 볼터치
-function drawSafeBlush(cx, cy, isRight = false) {
+// ★ 볼터치 방향 반전 수정 (왼쪽: /// , 오른쪽: \\\)
+  function drawSafeBlush(cx, cy, isRight = false) {
     for (let i = 0; i < 3; i++) {
       let ox = cx + (i * 4);
       if (isRight) {
-        // 오른쪽 볼터치 (/// 모양)
-        setPixel(ox + 2, cy);     setPixel(ox + 3, cy);
-        setPixel(ox + 1, cy + 1); setPixel(ox + 2, cy + 1);
-        setPixel(ox,     cy + 2); setPixel(ox + 1, cy + 2);
-      } else {
-        // 왼쪽 볼터치 (\\\ 모양)
+        // 오른쪽 볼터치 (\\\ 모양: 아래로 갈수록 오른쪽)
         setPixel(ox,     cy);     setPixel(ox + 1, cy);
         setPixel(ox + 1, cy + 1); setPixel(ox + 2, cy + 1);
         setPixel(ox + 2, cy + 2); setPixel(ox + 3, cy + 2);
+      } else {
+        // 왼쪽 볼터치 (/// 모양: 아래로 갈수록 왼쪽)
+        setPixel(ox + 2, cy);     setPixel(ox + 3, cy);
+        setPixel(ox + 1, cy + 1); setPixel(ox + 2, cy + 1);
+        setPixel(ox,     cy + 2); setPixel(ox + 1, cy + 2);
       }
     }
   }
