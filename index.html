@@ -24,7 +24,7 @@
     header h1 { font-size: 26px; color: var(--accent); margin-bottom: 6px; }
     header p { color: var(--muted); font-size: 14px; }
 
-    /* 기기 연결 상태 대시보드 */
+    /* [개선 1] 우측 상단 순수 연결 상태 인디케이터 */
     .connection-status-card {
       background: #0b1120;
       border: 1px solid var(--border);
@@ -45,7 +45,7 @@
       align-items: center;
       gap: 8px;
       background: #1e293b;
-      padding: 8px 14px;
+      padding: 8px 16px;
       border-radius: 20px;
       font-size: 13px;
       font-weight: 700;
@@ -69,17 +69,6 @@
       50% { transform: scale(1.15); opacity: 1; }
       100% { transform: scale(0.95); opacity: 0.8; }
     }
-    .btn-connect-toggle {
-      background: #334155;
-      border: 1px solid var(--border);
-      color: #fff;
-      padding: 6px 12px;
-      border-radius: 8px;
-      font-size: 12px;
-      cursor: pointer;
-      font-weight: 600;
-    }
-    .btn-connect-toggle:hover { background: #475569; }
 
     /* 탭 메뉴 */
     .tabs { display: flex; gap: 8px; margin-bottom: 20px; background: #0b1120; padding: 6px; border-radius: 14px; border: 1px solid var(--border); }
@@ -89,18 +78,42 @@
     .tab-content { display: none; background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 24px; margin-bottom: 24px; }
     .tab-content.active { display: block; }
 
-    /* 조립 가이드 테이블 */
-    .pin-table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 13px; }
-    .pin-table th, .pin-table td { border: 1px solid var(--border); padding: 10px; text-align: left; }
-    .pin-table th { background: #0f172a; color: var(--accent); }
-
-    /* 128x64 풀 도트 캔버스 */
-    .canvas-container {
+    /* [개선 1-2] 1번 탭 버튼 2개 분리 카드 */
+    .flash-action-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-top: 16px;
+    }
+    .action-box {
+      background: #0f172a;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px;
+      text-align: center;
       display: flex;
       flex-direction: column;
-      align-items: center;
+      justify-content: space-between;
       gap: 12px;
     }
+    .action-box h4 { font-size: 15px; color: var(--accent); }
+    .action-box p { font-size: 12px; color: var(--muted); line-height: 1.5; }
+    .btn-connect-step {
+      background: #334155;
+      border: 1px solid var(--border);
+      color: #fff;
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .btn-connect-step:hover { background: #475569; }
+    .btn-connect-step.is-on { background: rgba(34, 197, 94, 0.2); border-color: var(--green); color: var(--green); }
+
+    /* 128x64 풀 도트 캔버스 */
+    .canvas-container { display: flex; flex-direction: column; align-items: center; gap: 12px; }
     .canvas-viewport {
       border: 3px solid #38bdf8;
       border-radius: 10px;
@@ -109,17 +122,8 @@
       overflow: hidden;
       line-height: 0;
     }
-    canvas {
-      cursor: crosshair;
-      image-rendering: pixelated;
-    }
-    .toolbar {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      justify-content: center;
-      width: 100%;
-    }
+    canvas { cursor: crosshair; image-rendering: pixelated; }
+    .toolbar { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; width: 100%; }
     .tool-btn {
       background: #0f172a;
       border: 1px solid var(--border);
@@ -134,7 +138,7 @@
     .tool-btn:hover { border-color: var(--accent); }
     .tool-btn.active { background: var(--accent); color: #0f172a; }
 
-    /* 신규: 이미지 업로드 및 대비 조절 패널 */
+    /* 이미지 업로드 & 대비 슬라이더 */
     .img-upload-panel {
       width: 100%;
       background: #0f172a;
@@ -148,12 +152,6 @@
       justify-content: space-between;
       gap: 12px;
     }
-    .file-input-wrap {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .file-input-wrap input[type="file"] { display: none; }
     .btn-file-select {
       background: #334155;
       border: 1px solid var(--accent);
@@ -164,18 +162,8 @@
       font-weight: 700;
       cursor: pointer;
     }
-    .slider-wrap {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 12px;
-      color: var(--muted);
-    }
-    .slider-wrap input[type="range"] {
-      cursor: pointer;
-      width: 110px;
-      accent-color: var(--accent);
-    }
+    .slider-wrap { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
+    .slider-wrap input[type="range"] { cursor: pointer; width: 110px; accent-color: var(--accent); }
 
     /* 기능 토글 */
     .toggle-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--border); }
@@ -210,25 +198,22 @@
     <p>128×64 풀 스크린 표정 커스텀 및 기능 제어 플랫폼</p>
   </header>
 
-  <!-- 기기 연결 상태 바 -->
+  <!-- [개선 1] 우측 상단 순수 연결 상태 표시 배지 -->
   <div class="connection-status-card">
     <div class="device-info">
       <div class="device-icon">🤖</div>
       <div class="device-text">
         <h4 id="deviceTitle">ESP32-C3 미연결</h4>
-        <p id="deviceSubText">USB 케이블을 연결한 뒤 상태를 확인하세요</p>
+        <p id="deviceSubText">USB 케이블 연결 후 1단계 버튼을 눌러주세요</p>
       </div>
     </div>
-    <div style="display: flex; align-items: center; gap: 10px;">
-      <div class="status-badge">
-        <div class="status-dot" id="statusDot"></div>
-        <span id="statusLabel" style="color: var(--muted);">연결 없음</span>
-      </div>
-      <button class="btn-connect-toggle" id="btnConnectToggle" onclick="handleManualConnect()">기기 연결</button>
+    <div class="status-badge">
+      <div class="status-dot" id="statusDot"></div>
+      <span id="statusLabel" style="color: var(--muted);">연결 끊김</span>
     </div>
   </div>
 
-  <!-- 상단 탭 네비게이션 -->
+  <!-- 탭 메뉴 -->
   <div class="tabs">
     <button class="tab-btn active" onclick="openTab('tab-flash')">1. 펌웨어 설치</button>
     <button class="tab-btn" onclick="openTab('tab-guide')">2. 조립 가이드</button>
@@ -236,39 +221,57 @@
     <button class="tab-btn" onclick="openTab('tab-feature')">4. 기능 설정</button>
   </div>
 
-  <!-- [탭 1] 펌웨어 설치 -->
+  <!-- [개선 1-2] 1번 탭: 연결과 다운로드가 2개로 분리된 액션 박스 -->
   <div id="tab-flash" class="tab-content active">
-    <h3 style="margin-bottom: 10px;">엔진 펌웨어 설치</h3>
-    <p style="color: var(--muted); font-size: 14px; margin-bottom: 20px;">
-      ESP32-C3 보드를 PC에 꽂고 아래 파란색 버튼을 눌러 바이너리를 최초 1회 설치합니다.
+    <h3 style="margin-bottom: 6px;">엔진 펌웨어 및 기기 연동</h3>
+    <p style="color: var(--muted); font-size: 13px;">
+      USB 케이블로 PC와 ESP32-C3 보드를 연결한 뒤 아래 순서대로 진행하세요.
     </p>
-    <div style="text-align: center; padding: 20px 0;">
-      <esp-web-install-button manifest="./manifest.json"></esp-web-install-button>
+
+    <div class="flash-action-grid">
+      <!-- 1번 버튼: Web Serial 시리얼 통신 연결 -->
+      <div class="action-box">
+        <div>
+          <h4>1단계: 기기 통신 연결</h4>
+          <p>보드와 웹 브라우저 간의 시리얼 데이터 통신을 연결합니다.</p>
+        </div>
+        <button class="btn-connect-step" id="btnStepConnect" onclick="handleManualConnect()">🔌 기기 시리얼 연결</button>
+      </div>
+
+      <!-- 2번 버튼: 펌웨어 플래싱 (다운로드) -->
+      <div class="action-box">
+        <div>
+          <h4>2단계: 펌웨어 다운로드</h4>
+          <p>ESP Web Tools를 통해 보드에 최신 코드를 직접 굽습니다.</p>
+        </div>
+        <div style="display: flex; justify-content: center;">
+          <esp-web-install-button manifest="./manifest.json"></esp-web-install-button>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- [탭 2] 하드웨어 가이드 -->
+  <!-- 2번 탭: 하드웨어 가이드 -->
   <div id="tab-guide" class="tab-content">
     <h3 style="margin-bottom: 10px;">하드웨어 배선 안내</h3>
-    <table class="pin-table">
-      <thead>
-        <tr><th>부품명</th><th>부품 핀</th><th>ESP32-C3 슈퍼미니 핀</th></tr>
-      </thead>
-      <tbody>
-        <tr><td>0.96인치 OLED</td><td>SDA</td><td><strong>GPIO 8</strong></td></tr>
-        <tr><td>0.96인치 OLED</td><td>SCL</td><td><strong>GPIO 9</strong></td></tr>
-        <tr><td>0.96인치 OLED</td><td>VCC / GND</td><td>3.3V / GND</td></tr>
-        <tr><td>리미트 스위치</td><td>NO</td><td><strong>GPIO 7</strong></td></tr>
-        <tr><td>리미트 스위치</td><td>COM</td><td><strong>GND</strong></td></tr>
-      </tbody>
+    <p style="color: var(--muted); font-size: 13px; line-height: 1.6;">
+      OLED와 스위치 단자를 아래 핀 번호에 맞게 배선합니다.
+    </p>
+    <table style="width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 13px;">
+      <tr style="background:#0f172a; color:var(--accent);"><th style="padding:10px; border:1px solid var(--border);">부품</th><th style="padding:10px; border:1px solid var(--border);">부품 핀</th><th style="padding:10px; border:1px solid var(--border);">ESP32-C3 핀</th></tr>
+      <tr><td style="padding:10px; border:1px solid var(--border);">0.96인치 OLED</td><td style="padding:10px; border:1px solid var(--border);">SDA</td><td style="padding:10px; border:1px solid var(--border);"><strong>GPIO 8</strong></td></tr>
+      <tr><td style="padding:10px; border:1px solid var(--border);">0.96인치 OLED</td><td style="padding:10px; border:1px solid var(--border);">SCL</td><td style="padding:10px; border:1px solid var(--border);"><strong>GPIO 9</strong></td></tr>
+      <tr><td style="padding:10px; border:1px solid var(--border);">0.96인치 OLED</td><td style="padding:10px; border:1px solid var(--border);">VCC / GND</td><td style="padding:10px; border:1px solid var(--border);">3.3V / GND</td></tr>
+      <tr><td style="padding:10px; border:1px solid var(--border);">리미트 스위치</td><td style="padding:10px; border:1px solid var(--border);">NO</td><td style="padding:10px; border:1px solid var(--border);"><strong>GPIO 7</strong></td></tr>
+      <tr><td style="padding:10px; border:1px solid var(--border);">리미트 스위치</td><td style="padding:10px; border:1px solid var(--border);">COM</td><td style="padding:10px; border:1px solid var(--border);"><strong>GND</strong></td></tr>
     </table>
   </div>
 
-  <!-- [탭 3] 128x64 풀스크린 도트 픽셀 에디터 & 이미지 변환기 -->
+  <!-- 3번 탭: 풀스크린 표정 에디터 -->
   <div id="tab-face" class="tab-content">
-    <h3 style="margin-bottom: 6px;">128×64 풀 스크린 에디터 & 이미지 변환</h3>
+    <h3 style="margin-bottom: 6px;">128×64 풀 스크린 표정 디자인</h3>
     <p style="color: var(--muted); font-size: 13px; margin-bottom: 16px;">
-      마우스로 직접 그리거나, PNG 이미지를 불러와 128×64 도트 비트맵으로 자동 변환하세요.
+      캔버스에 직접 그리거나 PNG 사진을 올려 도트로 자동 변환하세요.
     </p>
 
     <div class="canvas-container">
@@ -284,16 +287,14 @@
         <button class="tool-btn" onclick="loadDefaultPetFace()">🐱 기본 표정</button>
       </div>
 
-      <!-- 이미지 자동 도트화 도구 패널 -->
       <div class="img-upload-panel">
-        <div class="file-input-wrap">
-          <label class="btn-file-select" for="imgFileInput">📁 이미지 파일(PNG/JPG) 선택</label>
-          <input type="file" id="imgFileInput" accept="image/*" onchange="handleImageUpload(event)">
-          <span id="fileNameLabel" style="font-size: 12px; color: var(--muted);">선택된 파일 없음</span>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <label class="btn-file-select" for="imgFileInput">📁 이미지 선택</label>
+          <input type="file" id="imgFileInput" accept="image/*" style="display:none;" onchange="handleImageUpload(event)">
+          <span id="fileNameLabel" style="font-size:12px; color:var(--muted);">선택된 파일 없음</span>
         </div>
-
         <div class="slider-wrap">
-          <span>흑백 대비:</span>
+          <span>대비:</span>
           <input type="range" id="thresholdSlider" min="10" max="245" value="128" oninput="reprocessUploadedImage()">
           <span id="thresholdVal">128</span>
         </div>
@@ -301,7 +302,7 @@
     </div>
   </div>
 
-  <!-- [탭 4] 세부 기능 토글 -->
+  <!-- 4번 탭: 세부 기능 토글 -->
   <div id="tab-feature" class="tab-content">
     <h3 style="margin-bottom: 14px;">기능 On / Off 토글</h3>
 
@@ -339,11 +340,11 @@
     </div>
   </div>
 
-  <!-- [조건부 노출 카드] 설정 주입 영역 -->
+  <!-- 3, 4번 탭에서만 조건부 노출되는 주입 카드 -->
   <div id="syncCard">
     <h4 style="margin-bottom: 6px; color: var(--accent);">⚡ 변경된 풀 도트 표정 & 설정 기기로 전송</h4>
     <p style="color: var(--muted); font-size: 13px;">
-      캔버스에 올라온 128×64 화면과 기능 옵션을 보드의 플래시 메모리에 즉시 굽습니다.
+      128×64 화면과 토글 옵션을 보드의 비휘발성 메모리(Preferences)에 즉시 굽습니다.
     </p>
     <button class="btn-sync" onclick="sendFullCanvasToDevice()">기기로 설정 주입하기</button>
   </div>
@@ -367,7 +368,7 @@
     }
   }
 
-  // ---------------- [Web Serial 연결 관리] ----------------
+  // ---------------- [Web Serial 통신 핸들러] ----------------
   async function handleManualConnect() {
     if (!("serial" in navigator)) {
       alert("PC 크롬(Chrome) 또는 엣지(Edge) 브라우저를 이용해 주세요.");
@@ -401,22 +402,28 @@
     const label = document.getElementById('statusLabel');
     const title = document.getElementById('deviceTitle');
     const subText = document.getElementById('deviceSubText');
-    const btn = document.getElementById('btnConnectToggle');
+    const btn = document.getElementById('btnStepConnect');
 
     if (isConnected) {
       dot.classList.add('connected');
-      label.innerText = '연결됨 (정상)';
+      label.innerText = '온라인 (정상)';
       label.style.color = '#22c55e';
-      title.innerText = 'ESP32-C3 DeskPet 온라인';
-      subText.innerText = '시리얼 통신 포트가 정상 연결되었습니다.';
-      btn.innerText = '연결 해제';
+      title.innerText = 'ESP32-C3 DeskPet 연결됨';
+      subText.innerText = '양방향 데이터 통신이 활성화되었습니다.';
+      if (btn) {
+        btn.innerText = '✅ 연결 완료 (클릭 시 해제)';
+        btn.classList.add('is-on');
+      }
     } else {
       dot.classList.remove('connected');
-      label.innerText = '연결 없음';
+      label.innerText = '연결 끊김';
       label.style.color = 'var(--muted)';
       title.innerText = 'ESP32-C3 미연결';
-      subText.innerText = 'USB 케이블을 연결한 뒤 [기기 연결]을 눌러주세요.';
-      btn.innerText = '기기 연결';
+      subText.innerText = 'USB 케이블 연결 후 1단계 버튼을 눌러주세요';
+      if (btn) {
+        btn.innerText = '🔌 기기 시리얼 연결';
+        btn.classList.remove('is-on');
+      }
     }
   }
 
@@ -430,7 +437,7 @@
   let oledGrid = Array(OLED_H).fill(0).map(() => Array(OLED_W).fill(0));
   let isPainting = false;
   let currentTool = 'pen';
-  let uploadedImgObj = null; // 업로드된 원본 이미지 캐시
+  let uploadedImgObj = null;
 
   function renderOledGrid() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -493,14 +500,12 @@
     renderOledGrid();
   }
 
-  // ---------------- [이미지 업로드 및 128x64 도트 자동 변환 로직] ----------------
   function handleImageUpload(e) {
     const file = e.target.files[0];
     if (!file) return;
 
     document.getElementById('fileNameLabel').innerText = file.name;
     const reader = new FileReader();
-
     reader.onload = function(event) {
       const img = new Image();
       img.onload = function() {
@@ -515,27 +520,20 @@
   function reprocessUploadedImage() {
     const threshold = document.getElementById('thresholdSlider').value;
     document.getElementById('thresholdVal').innerText = threshold;
-    if (uploadedImgObj) {
-      convertImageToDots();
-    }
+    if (uploadedImgObj) convertImageToDots();
   }
 
   function convertImageToDots() {
     if (!uploadedImgObj) return;
-
     const threshold = parseInt(document.getElementById('thresholdSlider').value, 10);
-
-    // 가상 128x64 메모리 캔버스 생성
     const tempCanvas = document.createElement('canvas');
     tempCanvas.width = OLED_W;
     tempCanvas.height = OLED_H;
     const tempCtx = tempCanvas.getContext('2d');
 
-    // 검은색 배경으로 초기화
     tempCtx.fillStyle = '#000000';
     tempCtx.fillRect(0, 0, OLED_W, OLED_H);
 
-    // 비율 유지 리사이즈 계산 (Fit)
     const scale = Math.min(OLED_W / uploadedImgObj.width, OLED_H / uploadedImgObj.height);
     const w = uploadedImgObj.width * scale;
     const h = uploadedImgObj.height * scale;
@@ -543,32 +541,19 @@
     const offsetY = (OLED_H - h) / 2;
 
     tempCtx.drawImage(uploadedImgObj, offsetX, offsetY, w, h);
+    const data = tempCtx.getImageData(0, 0, OLED_W, OLED_H).data;
 
-    // 픽셀 데이터 가져오기
-    const imgData = tempCtx.getImageData(0, 0, OLED_W, OLED_H);
-    const data = imgData.data;
-
-    // 밝기(Luma) 계산 후 도트 비트맵 매핑
     for (let y = 0; y < OLED_H; y++) {
       for (let x = 0; x < OLED_W; x++) {
         const idx = (y * OLED_W + x) * 4;
-        const r = data[idx];
-        const g = data[idx + 1];
-        const b = data[idx + 2];
-        const a = data[idx + 3];
-
-        // 투명 픽셀은 배경(0)으로 처리, 일반 픽셀은 ITU-R BT.601 명도 계산
-        let brightness = (0.299 * r + 0.587 * g + 0.114 * b);
-        if (a < 128) brightness = 0;
-
+        let brightness = (0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2]);
+        if (data[idx + 3] < 128) brightness = 0;
         oledGrid[y][x] = (brightness >= threshold) ? 1 : 0;
       }
     }
-
     renderOledGrid();
   }
 
-  // 128x64 비트맵 Hex String(2,048자리) 추출
   function getFullOledBitmapHex() {
     let hexArr = [];
     for (let y = 0; y < OLED_H; y++) {
@@ -576,9 +561,7 @@
         let b = 0;
         for (let bit = 0; bit < 8; bit++) {
           let x = (byteCol * 8) + bit;
-          if (oledGrid[y][x]) {
-            b |= (1 << (7 - bit));
-          }
+          if (oledGrid[y][x]) b |= (1 << (7 - bit));
         }
         hexArr.push(b.toString(16).padStart(2, '0'));
       }
@@ -586,7 +569,7 @@
     return hexArr.join('');
   }
 
-  // ---------------- [Web Serial 전송] ----------------
+  // ---------------- [설정 주입 전송 로직] ----------------
   async function sendFullCanvasToDevice() {
     if (!("serial" in navigator)) {
       alert("크롬 또는 엣지 브라우저에서 실행해 주세요.");
@@ -612,7 +595,7 @@
       await writer.write(encoder.encode(payload));
       writer.releaseLock();
 
-      alert("🎉 128×64 풀 스크린 표정이 DeskPet에 성공적으로 주입되었습니다!");
+      alert("🎉 맞춤 표정 및 기능 설정이 DeskPet에 성공적으로 주입되었습니다!");
     } catch (err) {
       console.error(err);
       alert("주입 중 오류가 발생했습니다: " + err.message);
