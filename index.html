@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DeskPet 커스텀 스튜디오</title>
   <script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
-  <!-- MQTT 웹 소켓 라이브러리 (브라우저 채팅 연동용) -->
+  <!-- MQTT 웹소켓 라이브러리 (브라우저 실시간 채팅용) -->
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
   <style>
     :root {
@@ -26,7 +26,7 @@
     header h1 { font-size: 26px; color: var(--accent); margin-bottom: 6px; }
     header p { color: var(--muted); font-size: 14px; }
 
-    /* 우측 상단 연결 상태 인디케이터 */
+    /* 연결 상태 인디케이터 */
     .connection-status-card {
       background: #0b1120;
       border: 1px solid var(--border);
@@ -135,7 +135,7 @@
     .layer-overlay {
       position: absolute; left: 0; right: 0; pointer-events: none; background: rgba(15, 23, 42, 0.88); border: 1px dashed rgba(56, 189, 248, 0.5); color: #38bdf8; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; user-select: none;
     }
-    .layer-overlay.top { top: 0; height: 40px; border-bottom-style: solid; } /* 10px * 4 = 40px */
+    .layer-overlay.top { top: 0; height: 40px; border-bottom-style: solid; }
     .layer-overlay.bottom { bottom: 0; height: 40px; border-top-style: solid; }
 
     .toolbar { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; width: 100%; }
@@ -177,7 +177,7 @@
     <p>네트워크 초기 설정 & 감성 표정 커스텀 올인원 플랫폼</p>
   </header>
 
-  <!-- 우측 상단 연결 상태 인디케이터 -->
+  <!-- 연결 상태 인디케이터 -->
   <div class="connection-status-card">
     <div class="device-info">
       <div class="device-icon">🤖</div>
@@ -192,7 +192,7 @@
     </div>
   </div>
 
-  <!-- 상단 메인 탭 (채팅 탭 추가) -->
+  <!-- 상단 메인 탭 -->
   <div class="tabs">
     <button class="tab-btn active" onclick="openTab('tab-flash')">1. 펌웨어 설치</button>
     <button class="tab-btn" onclick="openTab('tab-init')">2. 기기 초기 설정</button>
@@ -243,7 +243,7 @@
         <div style="position: relative; display: flex; align-items: center;">
           <input type="password" id="initPass" placeholder="Wi-Fi 암호 입력 (없을 경우 비워둠)" style="padding-right: 42px;">
           <button type="button" onclick="togglePasswordVisibility()" style="position: absolute; right: 8px; background: transparent; border: none; font-size: 16px; cursor: pointer; color: var(--muted); padding: 4px;" title="암호 보기/숨기기">
-            <span id="eyeIcon">🔍</span>
+            <span id="eyeIcon">👁️</span>
           </button>
         </div>
       </div>
@@ -323,11 +323,11 @@
           <h5>하찮은 멍</h5>
           <span>깜빡임 탑재</span>
         </div>
-<div class="preset-card" id="cardPreset3" onclick="selectPresetFace(3)">
-  <div class="p-emoji">🤩</div>
-  <h5>상큼한 표정</h5>
-  <span>깜빡임 탑재</span>
-</div>
+        <div class="preset-card" id="cardPreset3" onclick="selectPresetFace(3)">
+          <div class="p-emoji">🤩</div>
+          <h5>상큼한 표정</h5>
+          <span>별빛 깜빡임</span>
+        </div>
         <div class="preset-card" id="cardPreset4" onclick="selectPresetFace(4)">
           <div class="p-emoji">^ ω ^</div>
           <h5>귀여운 눈웃음</h5>
@@ -403,7 +403,7 @@
     </div>
   </div>
 
-<!-- [탭 6] 💬 실시간 메시지/채팅 탭 -->
+  <!-- [탭 6] 💬 실시간 메시지/채팅 탭 -->
   <div id="tab-chat" class="tab-content">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
       <h3 style="margin:0;">💬 실시간 메시지 대화방</h3>
@@ -439,6 +439,7 @@
       </div>
     </div>
   </div>
+
   <!-- 조건부 주입 카드 -->
   <div id="syncCard">
     <h4 style="margin-bottom: 6px; color: var(--accent);">⚡ 맞춤 표정 & 기능 설정 기기로 전송</h4>
@@ -451,7 +452,7 @@
 
 <script>
   let activePort = null;
-  let activeAnimMode = 1; // 1: 기본동글눈, 2: 하찮은멍, 3: 상큼한표정, 4: 눈웃음, 5: 클래식냥이, 0: 커스텀고정
+  let activeAnimMode = 1; // 1: 기본동글눈, 2: 하찮은멍, 3: 상큼한표정(별눈), 4: 눈웃음, 5: 클래식냥이, 0: 커스텀고정
   let isLayerGuideOn = true;
 
   function openTab(tabId) {
@@ -464,6 +465,11 @@
     const syncCard = document.getElementById('syncCard');
     if (tabId === 'tab-face' || tabId === 'tab-feature') syncCard.style.display = 'block';
     else syncCard.style.display = 'none';
+
+    // 6번 채팅 탭 클릭 시 자동으로 MQTT 웹소켓 연결
+    if (tabId === 'tab-chat') {
+      initMqttChat();
+    }
   }
 
   function switchFaceCategory(cat) {
@@ -545,7 +551,7 @@
       eyeIcon.innerText = '🔒';
     } else {
       passInput.type = 'password';
-      eyeIcon.innerText = '🔍';
+      eyeIcon.innerText = '👁️';
     }
   }
 
@@ -632,7 +638,6 @@
     }
   }
 
-  // 3. 상하단 레이어 모드 전환 및 영역 잠금 클리어
   function setScreenMode(hasLayer) {
     isLayerGuideOn = hasLayer;
     document.getElementById('btnModeLayerOn').classList.toggle('active', hasLayer);
@@ -641,11 +646,10 @@
     document.getElementById('layerBottom').style.display = hasLayer ? 'flex' : 'none';
     document.getElementById('toggleOverlay').checked = hasLayer;
 
-    // 상하단 레이어 활성화 시 해당 10픽셀 영역 자동 클리어(잠금)
     if (hasLayer) {
       for (let x = 0; x < OLED_W; x++) {
-        for (let y = 0; y < 10; y++) oledGrid[y][x] = 0;       // 상단 10줄
-        for (let y = 54; y < 64; y++) oledGrid[y][x] = 0;     // 하단 10줄
+        for (let y = 0; y < 10; y++) oledGrid[y][x] = 0;
+        for (let y = 54; y < 64; y++) oledGrid[y][x] = 0;
       }
       renderOledGrid();
     }
@@ -657,22 +661,19 @@
     document.getElementById('toolEraser').classList.toggle('active', tool === 'eraser');
   }
 
-  // 3. 드로잉 시 상하단 잠금 영역 가드 적용
   function drawPixelAt(e) {
     const rect = canvas.getBoundingClientRect();
     const x = Math.floor((e.clientX - rect.left) / SCALE);
     const y = Math.floor((e.clientY - rect.top) / SCALE);
 
     if (x >= 0 && x < OLED_W && y >= 0 && y < OLED_H) {
-      // 상하단 레이어가 켜져 있으면 상단(0~9) 및 하단(54~63) 수정 완전 차단!
       if (isLayerGuideOn && (y < 10 || y >= 54)) {
-        return;
+        return; // 상하단 영역 수정 차단
       }
 
       oledGrid[y][x] = (currentTool === 'pen') ? 1 : 0;
       renderOledGrid();
 
-      // 직접 손으로 그리기 시작하면 커스텀 모드로 전환
       if (activeAnimMode !== 0) {
         activeAnimMode = 0;
         document.querySelectorAll('.preset-card').forEach(c => c.classList.remove('active'));
@@ -690,14 +691,12 @@
     renderOledGrid();
   }
 
-  // 2. 반전 기능 수정: activeAnimMode=0으로 즉각 전환 & 레이어 잠금 영역 보존
   function invertOledCanvas() {
-    activeAnimMode = 0; // ★ 반전 시 즉각 커스텀 모드로 전환하여 보드가 비트맵을 출력하도록 보장
+    activeAnimMode = 0; // 반전 시 즉각 커스텀 모드로 전환
     document.querySelectorAll('.preset-card').forEach(c => c.classList.remove('active'));
     document.getElementById('syncSummaryText').innerText = "반전된 128x64 고정 화면을 보드에 주입합니다 (깜빡임 없음).";
 
     for (let y = 0; y < OLED_H; y++) {
-      // 상하단 레이어 모드일 때는 잠긴 영역은 반전하지 않고 0(검은색) 유지
       if (isLayerGuideOn && (y < 10 || y >= 54)) {
         for (let x = 0; x < OLED_W; x++) oledGrid[y][x] = 0;
         continue;
@@ -786,47 +785,27 @@
     }
   }
 
-// 4점 별빛 눈 래스터라이저 (🤩 이모지 스타일)
+  function setPixel(x, y, color = 1) {
+    if (x >= 0 && x < OLED_W && y >= 0 && y < OLED_H) oledGrid[y][x] = color;
+  }
+
+  // ★ 4점 별빛 눈 래스터라이저 (🤩 이모지 스타일)
   function drawStarEye(cx, cy) {
-    const starWidths = [9, 8, 6, 4, 3, 2, 2, 1, 1, 0]; // 중심에서 상하로 멀어질 때의 좌우 폭
+    const starWidths = [9, 8, 6, 4, 3, 2, 2, 1, 1, 0];
     for (let dy = -9; dy <= 9; dy++) {
       let w = starWidths[Math.abs(dy)];
       for (let dx = -w; dx <= w; dx++) {
         setPixel(cx + dx, cy + dy, 1);
       }
     }
-    // 대각선 보조 스파클 포인트 (반짝임 극대화)
+    // 대각선 보조 스파클 포인트
     setPixel(cx - 5, cy - 5, 1);
     setPixel(cx + 5, cy - 5, 1);
     setPixel(cx - 5, cy + 5, 1);
     setPixel(cx + 5, cy + 5, 1);
   }
 
-  // selectPresetFace 함수 내부의 mode === 3 교체:
-  else if (mode === 3) {
-    // 3. 상큼한 표정 (🤩 반짝이는 별빛 눈 + 활짝 웃는 미소)
-    drawStarEye(35, 29);
-    drawStarEye(92, 29);
-
-    // 시원하고 밝게 벌린 D자형 미소 입
-    for (let x = 58; x <= 70; x++) setPixel(x, 39);
-    for (let y = 40; y <= 43; y++) {
-      for (let x = 59; x <= 69; x++) setPixel(x, y);
-    }
-    for (let x = 61; x <= 67; x++) setPixel(x, 44);
-
-    // 볼터치
-    drawSafeBlush(22, 34, false);
-    drawSafeBlush(98, 34, true);
-
-    document.getElementById('syncSummaryText').innerText = "상큼한 표정(별빛 눈)을 보드에 주입합니다 (깜빡임 지원).";
-  }
-
-  function setPixel(x, y, color = 1) {
-    if (x >= 0 && x < OLED_W && y >= 0 && y < OLED_H) oledGrid[y][x] = color;
-  }
-
-  // ---------------- [1. 리뉴얼된 5종 프리셋 렌더링] ----------------
+  // ---------------- [5종 프리셋 렌더링 로직] ----------------
   function selectPresetFace(mode) {
     activeAnimMode = mode;
     clearOledCanvas();
@@ -854,25 +833,22 @@
       document.getElementById('syncSummaryText').innerText = "하찮은 멍 표정을 보드에 주입합니다 (깜빡임 지원).";
     }
     else if (mode === 3) {
-      // 1. [리뉴얼] 상큼한 표정 (더 사랑스럽고 반짝이는 동글눈 + 톡톡 튀는 열린 미소 ∇)
-      drawU8g2Disc(35, 29, 11, 1);
-      drawU8g2Disc(92, 29, 11, 1);
-      // 사랑스러운 별빛 더블 하이라이트
-      drawU8g2Disc(32, 26, 4, 0);
-      drawU8g2Disc(89, 26, 4, 0);
-      drawU8g2Disc(39, 32, 2, 0);
-      drawU8g2Disc(96, 32, 2, 0);
+      // 3. 상큼한 표정 (🤩 반짝이는 별빛 눈 + 활짝 웃는 미소)
+      drawStarEye(35, 29);
+      drawStarEye(92, 29);
 
-      // 상큼하고 활짝 열린 귀여운 미소 입 (∇)
-      for (let x = 58; x <= 70; x++) setPixel(x, 40);
-      for (let x = 60; x <= 68; x++) setPixel(x, 41);
-      for (let x = 62; x <= 66; x++) setPixel(x, 42);
-      setPixel(64, 43);
+      // 시원하고 밝게 벌린 D자형 미소 입
+      for (let x = 58; x <= 70; x++) setPixel(x, 39);
+      for (let y = 40; y <= 43; y++) {
+        for (let x = 59; x <= 69; x++) setPixel(x, y);
+      }
+      for (let x = 61; x <= 67; x++) setPixel(x, 44);
 
-      // 톡톡 튀는 볼터치
+      // 볼터치
       drawSafeBlush(22, 34, false);
       drawSafeBlush(98, 34, true);
-      document.getElementById('syncSummaryText').innerText = "상큼한 표정을 보드에 주입합니다 (깜빡임 지원).";
+
+      document.getElementById('syncSummaryText').innerText = "상큼한 표정(별빛 눈)을 보드에 주입합니다 (깜빡임 지원).";
     }
     else if (mode === 4) {
       // 4. 귀여운 눈웃음
@@ -1007,9 +983,8 @@
     }
   }
 
-// ---------------- [4. 웹 브라우저 실시간 채팅 & 양방향 MQTT] ----------------
+  // ---------------- [실시간 채팅 & 양방향 MQTT] ----------------
   let mqttClient = null;
-  let isMqttSubscribed = false;
 
   function initMqttChat() {
     const code = document.getElementById('initPairCode').value.trim().toUpperCase();
@@ -1031,7 +1006,6 @@
           badge.style.color = '#22c55e';
           badge.style.borderColor = '#22c55e';
         }
-        // 내가 받는 토픽 & 상대방이 받는 토픽 모두 구독 (양방향 대화 기록 수신)
         const mySubTopic = `deskpet_2026/${code}/dev_${myName}`;
         const partnerSubTopic = `deskpet_2026/${code}/dev_${partner}`;
         
@@ -1058,17 +1032,15 @@
           return;
         }
 
-        // 일반 메시지: #MSG: 또는 #msg: 접두사 제거 후 표시
+        // 일반 메시지: #MSG: 접두사 제거
         let cleanText = msgStr;
         if (cleanText.toUpperCase().startsWith('#MSG:')) {
           cleanText = cleanText.substring(5);
         }
 
         if (topic === partnerTopic) {
-          // 내가 상대방에게 보낸 메시지
           appendChatMessage(myName, cleanText, true);
         } else if (topic === myTopic) {
-          // 상대방이 나에게 보낸 메시지
           appendChatMessage(partner, cleanText, false);
         }
       });
@@ -1117,7 +1089,7 @@
     row.appendChild(nameLabel);
     row.appendChild(bubble);
     box.appendChild(row);
-    box.scrollTop = box.scrollHeight; // 항상 최신 글 스크롤
+    box.scrollTop = box.scrollHeight;
   }
 
   function sendDeskPetMessage() {
@@ -1159,14 +1131,6 @@
     mqttClient.publish(targetTopic, cmdStr, { qos: 1 });
   }
 
-  // 6번 탭 클릭 시 자동으로 MQTT 접속 연결
-  const origOpenTab = openTab;
-  openTab = function(tabId) {
-    origOpenTab(tabId);
-    if (tabId === 'tab-chat') {
-      initMqttChat();
-    }
-  };
   selectPresetFace(1);
 </script>
 </body>
