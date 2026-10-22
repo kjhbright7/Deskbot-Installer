@@ -144,9 +144,9 @@
     }
     .tool-btn.active { background: var(--accent); color: #0f172a; }
 
-    /* 기능 토글 */
+    /* 기능 토글 공통 */
     .toggle-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--border); }
-    .toggle-info h4 { font-size: 15px; margin-bottom: 4px; }
+    .toggle-info h4 { font-size: 14px; margin-bottom: 4px; }
     .toggle-info p { font-size: 12px; color: var(--muted); }
     .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
     .switch input { opacity: 0; width: 0; height: 0; }
@@ -155,12 +155,88 @@
     input:checked + .slider { background-color: var(--accent); }
     input:checked + .slider:before { transform: translateX(20px); }
 
+    /* 5번 탭 세부 섹션 카드 */
+    .feature-section {
+      background: #0f172a;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px 18px;
+      margin-bottom: 18px;
+    }
+    .feature-section-header {
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .feature-section-header h4 {
+      font-size: 14px;
+      color: var(--accent);
+      font-weight: 700;
+    }
+    .feature-section-header span {
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .sub-option-box {
+      background: #1e293b;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 14px;
+      margin-top: 8px;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: 0.2s;
+    }
+
     /* 채팅 및 인터랙션 액션 버튼 */
     .chat-action-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
     .btn-chat-cmd {
       background: #0f172a; border: 1px solid var(--border); color: #fff; padding: 12px; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; transition: 0.2s; text-align: center;
     }
     .btn-chat-cmd:hover { border-color: var(--accent); transform: translateY(-2px); }
+
+    /* ★ 애플 감성 플로팅 초슬림 캡슐 스크롤바 */
+    #chatHistoryBox {
+      height: 240px;
+      background: #0b1120;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px 14px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 14px;
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
+    }
+    #chatHistoryBox::-webkit-scrollbar {
+      width: 5px;
+    }
+    #chatHistoryBox::-webkit-scrollbar-track {
+      background: transparent;
+      margin: 8px 0;
+    }
+    #chatHistoryBox::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 184, 0.2);
+      border-radius: 10px;
+      transition: background 0.25s ease-in-out;
+    }
+    #chatHistoryBox:hover::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 184, 0.45);
+    }
+    #chatHistoryBox::-webkit-scrollbar-thumb:active {
+      background: var(--accent);
+    }
+    #chatHistoryBox {
+      scrollbar-width: thin;
+      scrollbar-color: rgba(148, 163, 184, 0.25) transparent;
+    }
 
     /* 하단 조건부 주입 카드 */
     #syncCard {
@@ -183,7 +259,7 @@
       <div class="device-icon">🤖</div>
       <div class="device-text">
         <h4 id="deviceTitle">ESP32-C3 미연결</h4>
-        <p id="deviceSubText">USB 케이블 연결 후 1단계 버튼을 눌러주세요</p>
+        <p id="deviceSubText">펌웨어 설치 후 2단계 버튼을 눌러 기기와 연결하세요</p>
       </div>
     </div>
     <div class="status-badge">
@@ -202,7 +278,7 @@
     <button class="tab-btn" onclick="openTab('tab-chat')" style="color: #38bdf8;">💬 메시지/채팅</button>
   </div>
 
-<!-- [탭 1] 엔진 펌웨어 설치 및 기기 연동 (순서 변경 적용) -->
+  <!-- [탭 1] 엔진 펌웨어 설치 및 기기 연동 (1단계/2단계 순서 최적화) -->
   <div id="tab-flash" class="tab-content active">
     <h3 style="margin-bottom: 6px;">엔진 펌웨어 설치 및 기기 연동</h3>
     <p style="color: var(--muted); font-size: 13px;">
@@ -250,7 +326,7 @@
         <div style="position: relative; display: flex; align-items: center;">
           <input type="password" id="initPass" placeholder="Wi-Fi 암호 입력 (없을 경우 비워둠)" style="padding-right: 42px;">
           <button type="button" onclick="togglePasswordVisibility()" style="position: absolute; right: 8px; background: transparent; border: none; font-size: 16px; cursor: pointer; color: var(--muted); padding: 4px;" title="암호 보기/숨기기">
-            <span id="eyeIcon">👁️</span>
+            <span id="eyeIcon">🔍</span>
           </button>
         </div>
       </div>
@@ -384,33 +460,116 @@
     </div>
   </div>
 
-  <!-- [탭 5] 기능 설정 -->
+  <!-- [탭 5] 기능 설정 (상단: 초기 화면 오버레이 커스텀 / 하단: 버튼 인터랙션 제어) -->
   <div id="tab-feature" class="tab-content">
-    <h3 style="margin-bottom: 14px;">기능 On / Off 토글</h3>
-    <div class="toggle-row">
-      <div class="toggle-info">
-        <h4>시계 모드 활성화</h4>
-        <p>1회 클릭 시 로컬 디지털 시계 표시 허용</p>
+    <h3 style="margin-bottom: 6px;">기능 및 디스플레이 커스텀</h3>
+    <p style="color: var(--muted); font-size: 13px; margin-bottom: 18px;">
+      초기 화면에 띄울 정보들과 스위치 클릭 시 작동할 모드를 자유롭게 제어합니다.
+    </p>
+
+    <!-- [상단 섹션] 초기 화면 오버레이 설정 -->
+    <div class="feature-section">
+      <div class="feature-section-header">
+        <h4>🖥️ 초기 화면 (아이들 표정) 오버레이</h4>
+        <span>상/하단 레이어 정보 개별 제어</span>
       </div>
-      <label class="switch"><input type="checkbox" id="toggleTime" checked><span class="slider"></span></label>
+
+      <!-- 1. 시간 표시 토글 -->
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <h4>상단 중앙 시간 표시</h4>
+          <p>초기 표정 화면 상단에 실시간 디지털 시계를 표시합니다</p>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="toggleShowTime" checked onchange="toggleTimeFormatUI()">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <!-- 1-1. 12시간제 vs 24시간제 선택 (시간 표시 ON일 때만 활성화) -->
+      <div class="sub-option-box" id="boxTimeFormat">
+        <span style="font-size: 12px; color: var(--text); font-weight: 600;">시간 표시 방식</span>
+        <div style="display: flex; gap: 14px; font-size: 12px;">
+          <label style="cursor: pointer; display: flex; align-items: center; gap: 4px;">
+            <input type="radio" name="timeFormat" value="24" checked style="accent-color: var(--accent);"> 24시간제 (13:18)
+          </label>
+          <label style="cursor: pointer; display: flex; align-items: center; gap: 4px;">
+            <input type="radio" name="timeFormat" value="12" style="accent-color: var(--accent);"> 12시간제 (01:18)
+          </label>
+        </div>
+      </div>
+
+      <!-- 2. 좌측 하단 오늘 날짜 토글 -->
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <h4>좌측 하단 오늘 날짜</h4>
+          <p>초기 화면 좌측 하단에 오늘의 날짜(26.10.22)를 표시합니다</p>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="toggleShowDate" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <!-- 3. 우측 하단 D-Day 토글 -->
+      <div class="toggle-row" style="border-bottom: none;">
+        <div class="toggle-info">
+          <h4>우측 하단 D-DAY 표시</h4>
+          <p>초기 화면 우측 하단에 디데이(D+, D-DAY, D-)를 표시합니다</p>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="toggleShowDDay" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
     </div>
-    <div class="toggle-row">
-      <div class="toggle-info">
-        <h4>달력 모드 활성화</h4>
-        <p>연속 클릭 시 월간 캘린더 화면 전환 허용</p>
+
+    <!-- [하단 섹션] 버튼 인터랙션 및 화면 전환 설정 -->
+    <div class="feature-section">
+      <div class="feature-section-header">
+        <h4>🔘 버튼 조작 & 화면 모드 전환 제어</h4>
+        <span>스위치 클릭 시 넘어가는 화면 제어</span>
       </div>
-      <label class="switch"><input type="checkbox" id="toggleCalendar" checked><span class="slider"></span></label>
-    </div>
-    <div class="toggle-row">
-      <div class="toggle-info">
-        <h4>기본 상/하단 바 오버레이</h4>
-        <p>화면 위에 Wi-Fi 안테나와 D-Day 표시 유지</p>
+
+      <!-- 자동 복귀 토글 -->
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <h4>화면 자동 복귀 (Auto-Return)</h4>
+          <p>끄면 버튼을 다시 누를 때까지 시계/달력 화면에 계속 머뭅니다</p>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="toggleAutoReturn" checked>
+          <span class="slider"></span>
+        </label>
       </div>
-      <label class="switch"><input type="checkbox" id="toggleOverlay" checked><span class="slider"></span></label>
+
+      <!-- 전체화면 시계 모드 허용 -->
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <h4>전체화면 시계 모드</h4>
+          <p>스위치 1회 클릭 시 전체화면 시계 디테일 진입 허용</p>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="toggleClkMode" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <!-- 전체화면 달력 모드 허용 -->
+      <div class="toggle-row" style="border-bottom: none;">
+        <div class="toggle-info">
+          <h4>전체화면 캘린더 모드</h4>
+          <p>스위치 연속 클릭 시 월간 달력 디테일 진입 허용</p>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="toggleCalMode" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
     </div>
   </div>
 
-  <!-- [탭 6] 💬 실시간 메시지/채팅 탭 -->
+  <!-- [탭 6] 💬 실시간 메시지/채팅 탭 (애플 스타일 스크롤바 적용) -->
   <div id="tab-chat" class="tab-content">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
       <h3 style="margin:0;">💬 실시간 메시지 대화방</h3>
@@ -420,8 +579,8 @@
       상대방 DeskPet과 실시간으로 주고받은 편지 내역입니다.
     </p>
 
-    <!-- 대화 메시지 로그 뷰어 -->
-    <div id="chatHistoryBox" style="height: 240px; background: #0b1120; border: 1px solid var(--border); border-radius: 14px; padding: 14px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px;">
+    <!-- 대화 메시지 로그 뷰어 (애플 감성 캡슐 스크롤바) -->
+    <div id="chatHistoryBox">
       <div style="text-align: center; color: var(--muted); font-size: 11px;">
         💡 2번 탭에서 커플 코드와 닉네임을 설정한 뒤 전송하면 대화 내역이 실시간 기록됩니다.
       </div>
@@ -449,7 +608,7 @@
 
   <!-- 조건부 주입 카드 -->
   <div id="syncCard">
-    <h4 style="margin-bottom: 6px; color: var(--accent);">⚡ 맞춤 표정 & 기능 설정 기기로 전송</h4>
+    <h4 style="margin-bottom: 6px; color: var(--accent);">⚡ 맞춤 표정 & 세부 기능 설정 기기로 전송</h4>
     <p style="color: var(--muted); font-size: 13px;" id="syncSummaryText">
       현재 선택된 표정과 옵션을 보드의 비휘발성 플래시에 즉시 굽습니다.
     </p>
@@ -525,7 +684,7 @@
     }
   }
 
-function updateConnectionUI(isConnected) {
+  function updateConnectionUI(isConnected) {
     const dot = document.getElementById('statusDot');
     const label = document.getElementById('statusLabel');
     const title = document.getElementById('deviceTitle');
@@ -558,7 +717,7 @@ function updateConnectionUI(isConnected) {
       eyeIcon.innerText = '🔒';
     } else {
       passInput.type = 'password';
-      eyeIcon.innerText = '👁️';
+      eyeIcon.innerText = '🔍';
     }
   }
 
@@ -586,7 +745,7 @@ function updateConnectionUI(isConnected) {
 
   async function sendSystemInitToDevice() {
     if (!activePort || !activePort.writable) {
-      alert("먼저 1단계에서 [기기 시리얼 연결]을 완료해 주세요.");
+      alert("먼저 1번 탭 2단계에서 [기기 시리얼 연결]을 완료해 주세요.");
       return;
     }
 
@@ -651,7 +810,6 @@ function updateConnectionUI(isConnected) {
     document.getElementById('btnModeLayerOff').classList.toggle('active', !hasLayer);
     document.getElementById('layerTop').style.display = hasLayer ? 'flex' : 'none';
     document.getElementById('layerBottom').style.display = hasLayer ? 'flex' : 'none';
-    document.getElementById('toggleOverlay').checked = hasLayer;
 
     if (hasLayer) {
       for (let x = 0; x < OLED_W; x++) {
@@ -796,7 +954,7 @@ function updateConnectionUI(isConnected) {
     if (x >= 0 && x < OLED_W && y >= 0 && y < OLED_H) oledGrid[y][x] = color;
   }
 
-  // ★ 4점 별빛 눈 래스터라이저 (🤩 이모지 스타일)
+  // 4점 별빛 눈 래스터라이저 (🤩 이모지 스타일)
   function drawStarEye(cx, cy) {
     const starWidths = [9, 8, 6, 4, 3, 2, 2, 1, 1, 0];
     for (let dy = -9; dy <= 9; dy++) {
@@ -957,7 +1115,14 @@ function updateConnectionUI(isConnected) {
     return hexArr.join('');
   }
 
-  // ---------------- [설정 주입 전송 로직] ----------------
+  // ---------------- [기능 설정 UI 제어 & 설정 주입 전송 로직] ----------------
+  function toggleTimeFormatUI() {
+    const isTimeOn = document.getElementById('toggleShowTime').checked;
+    const box = document.getElementById('boxTimeFormat');
+    box.style.opacity = isTimeOn ? '1' : '0.4';
+    box.style.pointerEvents = isTimeOn ? 'auto' : 'none';
+  }
+
   async function sendFullCanvasToDevice() {
     if (!("serial" in navigator)) {
       alert("크롬 또는 엣지 브라우저에서 실행해 주세요.");
@@ -970,19 +1135,28 @@ function updateConnectionUI(isConnected) {
         updateConnectionUI(true);
       }
 
-      const timeEn = document.getElementById('toggleTime').checked ? "1" : "0";
-      const calEn  = document.getElementById('toggleCalendar').checked ? "1" : "0";
-      const overEn = document.getElementById('toggleOverlay').checked ? "1" : "0";
+      // 상단 초기 화면 옵션들
+      const showTime = document.getElementById('toggleShowTime').checked ? "1" : "0";
+      const timeFmt  = document.querySelector('input[name="timeFormat"]:checked').value; // "12" 또는 "24"
+      const showDate = document.getElementById('toggleShowDate').checked ? "1" : "0";
+      const showDDay = document.getElementById('toggleShowDDay').checked ? "1" : "0";
+
+      // 하단 모드 전환 옵션들
+      const clkMode = document.getElementById('toggleClkMode').checked ? "1" : "0";
+      const calMode = document.getElementById('toggleCalMode').checked ? "1" : "0";
+      const autoRet = document.getElementById('toggleAutoReturn').checked ? "1" : "0";
+
       const fullHex = getFullOledBitmapHex();
 
-      const payload = `#FULLCFG:${timeEn}:${calEn}:${overEn}:${activeAnimMode}:${fullHex}\n`;
+      // 확장 프로토콜: #FULLCFG:<TIME_EN>:<TIME_FMT>:<DATE_EN>:<DDAY_EN>:<CLK_EN>:<CAL_EN>:<AUTORET>:<ANIM_MODE>:<2048HEX>\n
+      const payload = `#FULLCFG:${showTime}:${timeFmt}:${showDate}:${showDDay}:${clkMode}:${calMode}:${autoRet}:${activeAnimMode}:${fullHex}\n`;
 
       const encoder = new TextEncoder();
       const writer = activePort.writable.getWriter();
       await writer.write(encoder.encode(payload));
       writer.releaseLock();
 
-      alert("🎉 맞춤 표정 및 기능 설정이 성공적으로 주입되었습니다!");
+      alert("🎉 맞춤 표정 및 세부 기능 설정이 성공적으로 주입되었습니다!");
     } catch (err) {
       console.error(err);
       alert("주입 중 오류가 발생했습니다: " + err.message);
@@ -1001,7 +1175,6 @@ function updateConnectionUI(isConnected) {
     if (!code || !myName || !partner) return;
 
     if (!mqttClient) {
-      // HiveMQ 공개 웹소켓 브로커 연결 (포트 8884 SSL)
       mqttClient = mqtt.connect('wss://broker.hivemq.com:8884/mqtt', {
         clientId: 'WebClient_' + Math.random().toString(16).substr(2, 8)
       });
@@ -1039,7 +1212,6 @@ function updateConnectionUI(isConnected) {
           return;
         }
 
-        // 일반 메시지: #MSG: 접두사 제거
         let cleanText = msgStr;
         if (cleanText.toUpperCase().startsWith('#MSG:')) {
           cleanText = cleanText.substring(5);
