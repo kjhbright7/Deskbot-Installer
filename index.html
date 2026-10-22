@@ -582,21 +582,31 @@
 
   // OLED 실제 사진 속 귀여운 곡선 냥이 입 (ㅅ)
   function drawCatMouth(cx, cy) {
-    const leftArc = [
-      {dx: -5, dy: 0}, {dx: -4, dy: 1}, {dx: -3, dy: 2}, 
-      {dx: -2, dy: 3}, {dx: -1, dy: 4}, {dx: 0, dy: 4}
-    ];
-    const rightArc = [
-      {dx: 0, dy: 4}, {dx: 1, dy: 4}, {dx: 2, dy: 3}, 
-      {dx: 3, dy: 2}, {dx: 4, dy: 1}, {dx: 5, dy: 0}
+    // cx=64, cy=43 기준
+    const mouthPixels = [
+      // 꼭대기 중앙 (x=64)
+      [cx, cy],
+      [cx, cy + 1],
+      // 왼쪽 사선 및 바닥 받침 (x: 59~63)
+      [cx - 1, cy + 2],
+      [cx - 2, cy + 3],
+      [cx - 3, cy + 4],
+      [cx - 4, cy + 4],
+      [cx - 5, cy + 4],
+      // 오른쪽 사선 및 바닥 받침 (x: 65~69)
+      [cx + 1, cy + 2],
+      [cx + 2, cy + 3],
+      [cx + 3, cy + 4],
+      [cx + 4, cy + 4],
+      [cx + 5, cy + 4]
     ];
 
-    leftArc.forEach(p => {
-      let px = (cx - 5) + p.dx;
-      let py = (cy - 4) + p.dy;
-      if (px >= 0 && px < OLED_W && py >= 0 && py < OLED_H) oledGrid[py][px] = 1;
+    mouthPixels.forEach(([x, y]) => {
+      if (x >= 0 && x < OLED_W && y >= 0 && y < OLED_H) {
+        oledGrid[y][x] = 1;
+      }
     });
-
+  }
     rightArc.forEach(p => {
       let px = (cx + 5) + p.dx;
       let py = (cy - 4) + p.dy;
