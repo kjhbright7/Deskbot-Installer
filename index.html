@@ -11,6 +11,8 @@
       --card: #1e293b;
       --border: #334155;
       --accent: #38bdf8;
+      --green: #22c55e;
+      --red: #ef4444;
       --text: #f8fafc;
       --muted: #94a3b8;
     }
@@ -18,9 +20,66 @@
     body { background-color: var(--bg); color: var(--text); padding: 30px 16px; display: flex; justify-content: center; }
     .container { max-width: 680px; width: 100%; }
     
-    header { text-align: center; margin-bottom: 24px; }
+    header { text-align: center; margin-bottom: 20px; }
     header h1 { font-size: 26px; color: var(--accent); margin-bottom: 6px; }
     header p { color: var(--muted); font-size: 14px; }
+
+    /* [신규] 기기 실시간 연결 상태 대시보드 */
+    .connection-status-card {
+      background: #0b1120;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 14px 20px;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .device-info { display: flex; align-items: center; gap: 12px; }
+    .device-icon { font-size: 26px; background: #1e293b; padding: 8px; border-radius: 12px; border: 1px solid var(--border); }
+    .device-text h4 { font-size: 15px; margin-bottom: 2px; }
+    .device-text p { font-size: 12px; color: var(--muted); }
+    
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #1e293b;
+      padding: 8px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 700;
+      border: 1px solid var(--border);
+    }
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--red);
+      box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
+      transition: 0.3s;
+    }
+    .status-dot.connected {
+      background: var(--green);
+      box-shadow: 0 0 10px rgba(34, 197, 94, 0.8);
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0% { transform: scale(0.95); opacity: 0.8; }
+      50% { transform: scale(1.15); opacity: 1; }
+      100% { transform: scale(0.95); opacity: 0.8; }
+    }
+    .btn-connect-toggle {
+      background: #334155;
+      border: 1px solid var(--border);
+      color: #fff;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .btn-connect-toggle:hover { background: #475569; }
 
     /* 탭 메뉴 */
     .tabs { display: flex; gap: 8px; margin-bottom: 20px; background: #0b1120; padding: 6px; border-radius: 14px; border: 1px solid var(--border); }
@@ -46,7 +105,7 @@
     .btn-sm { background: #334155; border: none; color: #fff; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 12px; }
 
     /* 기능 토글 */
-    .toggle-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); }
+    .toggle-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--border); }
     .toggle-info h4 { font-size: 15px; margin-bottom: 4px; }
     .toggle-info p { font-size: 12px; color: var(--muted); }
     .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
@@ -56,9 +115,18 @@
     input:checked + .slider { background-color: var(--accent); }
     input:checked + .slider:before { transform: translateX(20px); }
 
-    /* 하단 통신 영역 */
-    .sync-card { background: #0b1120; border: 1px solid var(--border); border-radius: 20px; padding: 20px; text-align: center; }
-    .btn-sync { background: var(--accent); color: #0f172a; border: none; font-weight: 800; font-size: 15px; padding: 14px 28px; border-radius: 12px; cursor: pointer; width: 100%; margin-top: 10px; }
+    /* [조건부 표시] 하단 설정 주입 카드 */
+    #syncCard {
+      display: none; /* 기본 숨김 (3, 4번 탭에서만 스크립트로 활성화) */
+      background: #0b1120;
+      border: 1px solid var(--accent);
+      border-radius: 20px;
+      padding: 22px;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(56, 189, 248, 0.15);
+    }
+    .btn-sync { background: var(--accent); color: #0f172a; border: none; font-weight: 800; font-size: 15px; padding: 14px 28px; border-radius: 12px; cursor: pointer; width: 100%; margin-top: 10px; transition: 0.2s; }
+    .btn-sync:hover { filter: brightness(1.1); }
   </style>
 </head>
 <body>
@@ -66,8 +134,26 @@
 <div class="container">
   <header>
     <h1>🐾 DeskPet Custom Studio</h1>
-    <p>펌웨어 설치, 조립 가이드, 맞춤 표정 및 기능 세팅 플랫폼</p>
+    <p>아두이노 IDE 없는 올인원 펌웨어 주입 및 기기 커스텀 플랫폼</p>
   </header>
+
+  <!-- [신규] 기기 연결 상태 바 (항상 상단 노출) -->
+  <div class="connection-status-card">
+    <div class="device-info">
+      <div class="device-icon">🤖</div>
+      <div class="device-text">
+        <h4 id="deviceTitle">ESP32-C3 미연결</h4>
+        <p id="deviceSubText">USB 케이블을 연결한 뒤 상태를 확인하세요</p>
+      </div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <div class="status-badge">
+        <div class="status-dot" id="statusDot"></div>
+        <span id="statusLabel" style="color: var(--muted);">연결 없음</span>
+      </div>
+      <button class="btn-connect-toggle" id="btnConnectToggle" onclick="handleManualConnect()">기기 연결</button>
+    </div>
+  </div>
 
   <!-- 상단 탭 네비게이션 -->
   <div class="tabs">
@@ -79,9 +165,9 @@
 
   <!-- [탭 1] 원클릭 웹 인스톨러 -->
   <div id="tab-flash" class="tab-content active">
-    <h3 style="margin-bottom: 10px;">펌웨어 원클릭 설치</h3>
+    <h3 style="margin-bottom: 10px;">기본 엔진 펌웨어 설치</h3>
     <p style="color: var(--muted); font-size: 14px; margin-bottom: 20px;">
-      USB 케이블로 ESP32-C3를 PC에 연결한 뒤 아래 버튼을 클릭하여 최신 펌웨어를 보드에 주입하세요.
+      ESP32-C3 보드를 PC에 꽂고 아래 파란색 버튼을 눌러 바이너리를 최초 1회 설치합니다.
     </p>
     <div style="text-align: center; padding: 20px 0;">
       <esp-web-install-button manifest="./manifest.json"></esp-web-install-button>
@@ -92,7 +178,7 @@
   <div id="tab-guide" class="tab-content">
     <h3 style="margin-bottom: 10px;">하드웨어 배선 안내</h3>
     <p style="color: var(--muted); font-size: 13px; line-height: 1.6;">
-      ESP32-C3 슈퍼미니 보드와 0.96인치 OLED, 리미트 스위치를 아래 표와 같이 연결합니다.
+      슈퍼미니 보드와 부품을 아래 규격대로 연결합니다.
     </p>
     <table class="pin-table">
       <thead>
@@ -112,7 +198,7 @@
   <div id="tab-face" class="tab-content">
     <h3 style="margin-bottom: 10px;">아이들 눈동자 디자인 (16×16 픽셀)</h3>
     <p style="color: var(--muted); font-size: 13px; margin-bottom: 16px;">
-      프리셋을 고르거나 캔버스에 마우스를 클릭/드래그하여 원하는 눈동자 모양을 그리세요.
+      원하는 프리셋을 누르거나 아래 캔버스에 직접 마우스로 나만의 눈동자를 그려보세요.
     </p>
     
     <div class="preset-grid">
@@ -168,26 +254,96 @@
     </div>
   </div>
 
-  <!-- [하단 공통] 기기로 맞춤 설정 전송 (Web Serial) -->
-  <div class="sync-card">
-    <h4 style="margin-bottom: 6px;">USB 유선 설정 즉시 적용</h4>
+  <!-- [조건부 노출 카드] 3번, 4번 탭에서만 활성화되는 설정 주입 영역 -->
+  <div id="syncCard">
+    <h4 style="margin-bottom: 6px; color: var(--accent);">⚡ 변경된 맞춤 설정을 기기로 전송</h4>
     <p style="color: var(--muted); font-size: 13px;">
-      보드가 연결된 상태에서 아래 버튼을 누르면 <strong>커스텀 표정 및 토글 설정</strong>이 즉시 주입됩니다.
+      방금 변경한 표정과 기능 토글 옵션을 연결된 DeskPet 메모리에 즉시 저장합니다.
     </p>
     <button class="btn-sync" onclick="sendConfigToDevice()">기기로 설정 주입하기</button>
   </div>
 </div>
 
 <script>
-  // 탭 전환 로직
+  // ---------------- [Web Serial 전역 포트 관리] ----------------
+  let activePort = null;
+
+  // 탭 전환 및 '설정 주입 카드' 조건부 노출 로직
   function openTab(tabId) {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    
     event.currentTarget.classList.add('active');
     document.getElementById(tabId).classList.add('active');
+
+    // 1번(설치), 2번(가이드)에서는 숨기고, 3번(표정), 4번(설정)에서만 표시
+    const syncCard = document.getElementById('syncCard');
+    if (tabId === 'tab-face' || tabId === 'tab-feature') {
+      syncCard.style.display = 'block';
+    } else {
+      syncCard.style.display = 'none';
+    }
   }
 
-  // 16x16 픽셀 에디터 구현
+  // 상단 기기 수동 연결/해제 핸들러
+  async function handleManualConnect() {
+    if (!("serial" in navigator)) {
+      alert("PC 크롬(Chrome) 또는 엣지(Edge) 브라우저에서만 가능합니다.");
+      return;
+    }
+
+    if (activePort) {
+      // 이미 연결된 경우 해제
+      try {
+        await activePort.close();
+      } catch (e) {}
+      activePort = null;
+      updateConnectionUI(false);
+      return;
+    }
+
+    try {
+      activePort = await navigator.serial.requestPort();
+      await activePort.open({ baudRate: 115200 });
+      updateConnectionUI(true);
+
+      // 케이블이 물리적으로 뽑혔을 때 자동 감지
+      activePort.ondisconnect = () => {
+        activePort = null;
+        updateConnectionUI(false);
+      };
+    } catch (err) {
+      console.warn("포트 연결 취소 또는 에러:", err);
+      updateConnectionUI(false);
+    }
+  }
+
+  // 상단 연결 상태 UI 업데이트
+  function updateConnectionUI(isConnected) {
+    const dot = document.getElementById('statusDot');
+    const label = document.getElementById('statusLabel');
+    const title = document.getElementById('deviceTitle');
+    const subText = document.getElementById('deviceSubText');
+    const btn = document.getElementById('btnConnectToggle');
+
+    if (isConnected) {
+      dot.classList.add('connected');
+      label.innerText = '연결됨 (정상)';
+      label.style.color = '#22c55e';
+      title.innerText = 'ESP32-C3 DeskPet 온라인';
+      subText.innerText = '시리얼 통신 포트가 정상 연결되었습니다.';
+      btn.innerText = '연결 해제';
+    } else {
+      dot.classList.remove('connected');
+      label.innerText = '연결 없음';
+      label.style.color = 'var(--muted)';
+      title.innerText = 'ESP32-C3 미연결';
+      subText.innerText = 'USB 케이블을 연결한 뒤 [기기 연결]을 눌러주세요.';
+      btn.innerText = '기기 연결';
+    }
+  }
+
+  // ---------------- [16x16 픽셀 에디터 구현] ----------------
   const canvas = document.getElementById('pixelCanvas');
   const ctx = canvas.getContext('2d');
   const GRID_SIZE = 16;
@@ -233,14 +389,13 @@
     renderGrid();
   }
 
-  // 기본 프리셋 로드
   function loadPreset(type) {
     clearCanvas();
     if (type === 'round') {
       for (let r = 2; r <= 13; r++) {
         for (let c = 2; c <= 13; c++) grid[r][c] = 1;
       }
-      grid[5][5] = 0; grid[5][6] = 0; grid[10][10] = 0; // 하이라이트 동공
+      grid[5][5] = 0; grid[5][6] = 0; grid[10][10] = 0;
     } else if (type === 'happy') {
       for (let c = 2; c <= 13; c++) {
         let r = Math.floor(Math.sin((c - 2) / 11 * Math.PI) * 6);
@@ -257,7 +412,6 @@
     renderGrid();
   }
 
-  // 16x16 그리드를 U8g2 16진수 비트맵 Hex String(32바이트)으로 직렬화
   function getBitmapHex() {
     let hexArr = [];
     for (let r = 0; r < GRID_SIZE; r++) {
@@ -270,40 +424,42 @@
     return hexArr.join('');
   }
 
-  // Web Serial API를 활용한 기기 즉시 설정 주입
+  // ---------------- [설정 주입 전송 로직] ----------------
   async function sendConfigToDevice() {
     if (!("serial" in navigator)) {
-      alert("크롬(Chrome) 또는 엣지(Edge) 브라우저에서만 가능합니다.");
+      alert("크롬(Chrome) 또는 엣지(Edge) 브라우저를 이용해 주세요.");
       return;
     }
 
     try {
-      const port = await navigator.serial.requestPort();
-      await port.open({ baudRate: 115200 });
+      // 포트가 아직 열려있지 않다면 요청
+      if (!activePort || !activePort.writable) {
+        activePort = await navigator.serial.requestPort();
+        await activePort.open({ baudRate: 115200 });
+        updateConnectionUI(true);
+      }
 
-      // 설정 패킷 구성
       const timeEn = document.getElementById('toggleTime').checked ? "1" : "0";
       const calEn = document.getElementById('toggleCalendar').checked ? "1" : "0";
       const blinkEn = document.getElementById('toggleBlink').checked ? "1" : "0";
       const faceHex = getBitmapHex();
 
-      // 프로토콜 형식: #CFG:<TIME>:<CAL>:<BLINK>:<32BYTE_HEX>\n
       const payload = `#CFG:${timeEn}:${calEn}:${blinkEn}:${faceHex}\n`;
 
       const encoder = new TextEncoder();
-      const writer = port.writable.getWriter();
+      const writer = activePort.writable.getWriter();
       await writer.write(encoder.encode(payload));
       writer.releaseLock();
-      await port.close();
 
       alert("🎉 맞춤 설정이 DeskPet에 성공적으로 주입되었습니다!");
     } catch (err) {
       console.error(err);
-      alert("기기 전송 중 오류가 발생했거나 취소되었습니다: " + err.message);
+      alert("전송 중 오류가 발생했습니다: " + err.message);
+      updateConnectionUI(false);
     }
   }
 
-  // 초기 로드 시 기본 둥근 눈동자 표시
+  // 초기 실행: 기본 프리셋 렌더링
   loadPreset('round');
 </script>
 </body>
