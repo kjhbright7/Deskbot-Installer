@@ -202,25 +202,33 @@
     <button class="tab-btn" onclick="openTab('tab-chat')" style="color: #38bdf8;">💬 메시지/채팅</button>
   </div>
 
-  <!-- [탭 1] 엔진 펌웨어 설치 -->
+<!-- [탭 1] 엔진 펌웨어 설치 및 기기 연동 (순서 변경 적용) -->
   <div id="tab-flash" class="tab-content active">
-    <h3 style="margin-bottom: 6px;">엔진 펌웨어 및 기기 연동</h3>
-    <p style="color: var(--muted); font-size: 13px;">USB 케이블로 PC와 ESP32-C3 보드를 연결한 뒤 아래 순서대로 진행하세요.</p>
+    <h3 style="margin-bottom: 6px;">엔진 펌웨어 설치 및 기기 연동</h3>
+    <p style="color: var(--muted); font-size: 13px;">
+      포트 충돌 방지를 위해 <strong>1단계(펌웨어 설치)</strong>를 먼저 완료한 후 <strong>2단계(통신 연결)</strong>를 진행해 주세요.
+    </p>
 
     <div class="flash-action-grid">
+      <!-- 1단계: 펌웨어 다운로드 -->
       <div class="action-box">
-        <h4>1단계: 기기 통신 연결</h4>
-        <p>보드와 브라우저 간의 시리얼 데이터 통신을 연결합니다.</p>
-        <button class="btn-connect-step" id="btnStepConnect" onclick="handleManualConnect()">🔌 기기 시리얼 연결</button>
-      </div>
-      <div class="action-box">
-        <h4>2단계: 펌웨어 다운로드</h4>
-        <p>ESP Web Tools를 통해 보드에 최신 코드를 직접 굽습니다.</p>
-        <div style="display: flex; justify-content: center;">
+        <h4>1단계: 펌웨어 다운로드</h4>
+        <p>ESP Web Tools를 통해 보드에 최신 펌웨어를 먼저 굽습니다.</p>
+        <div style="display: flex; justify-content: center; align-items: center; min-height: 48px;">
           <esp-web-install-button manifest="./manifest.json"></esp-web-install-button>
         </div>
       </div>
+
+      <!-- 2단계: 기기 통신 연결 -->
+      <div class="action-box">
+        <h4>2단계: 기기 통신 연결</h4>
+        <p>펌웨어 설치 완료 후, 맞춤 설정 및 표정 전송을 위한 시리얼 통신을 연결합니다.</p>
+        <button class="btn-connect-step" id="btnStepConnect" onclick="handleManualConnect()">
+          🔌 기기 시리얼 연결
+        </button>
+      </div>
     </div>
+  </div>
   </div>
 
   <!-- [탭 2] 기기 초기 네트워크 & 커플 설정 -->
@@ -518,7 +526,7 @@
     }
   }
 
-  function updateConnectionUI(isConnected) {
+function updateConnectionUI(isConnected) {
     const dot = document.getElementById('statusDot');
     const label = document.getElementById('statusLabel');
     const title = document.getElementById('deviceTitle');
@@ -537,7 +545,7 @@
       label.innerText = '연결 끊김';
       label.style.color = 'var(--muted)';
       title.innerText = 'ESP32-C3 미연결';
-      subText.innerText = 'USB 케이블 연결 후 1단계 버튼을 눌러주세요';
+      subText.innerText = '펌웨어 설치 후 2단계 버튼을 눌러 기기와 연결하세요';
       if (btn) { btn.innerText = '🔌 기기 시리얼 연결'; btn.classList.remove('is-on'); }
     }
   }
