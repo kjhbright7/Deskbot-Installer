@@ -615,18 +615,22 @@
  
 
   // 케이스 베젤에 닿지 않는 안전 영역 볼터치
-  function drawSafeBlush(cx, cy, isRight = false) {
+function drawSafeBlush(cx, cy, isRight = false) {
     for (let i = 0; i < 3; i++) {
-      let ox = cx + (i * 3);
-      let oy = cy;
+      let ox = cx + (i * 4);
       if (isRight) {
-        setPixel(ox, oy); setPixel(ox + 1, oy - 1); setPixel(ox + 2, oy - 2);
+        // 오른쪽 볼터치 (/// 모양)
+        setPixel(ox + 2, cy);     setPixel(ox + 3, cy);
+        setPixel(ox + 1, cy + 1); setPixel(ox + 2, cy + 1);
+        setPixel(ox,     cy + 2); setPixel(ox + 1, cy + 2);
       } else {
-        setPixel(ox + 2, oy); setPixel(ox + 1, oy - 1); setPixel(ox, oy - 2);
+        // 왼쪽 볼터치 (\\\ 모양)
+        setPixel(ox,     cy);     setPixel(ox + 1, cy);
+        setPixel(ox + 1, cy + 1); setPixel(ox + 2, cy + 1);
+        setPixel(ox + 2, cy + 2); setPixel(ox + 3, cy + 2);
       }
     }
   }
-
   function setPixel(x, y, color = 1) {
     if (x >= 0 && x < OLED_W && y >= 0 && y < OLED_H) oledGrid[y][x] = color;
   }
@@ -672,21 +676,25 @@
       drawSafeBlush(98, 36, true);
       document.getElementById('syncSummaryText').innerText = "상큼한 표정을 보드에 주입합니다 (깜빡임 지원).";
     }
-    else if (mode === 4) {
-      // 4. 귀여운 눈웃음
-      for (let x = 22; x <= 48; x++) {
-        let y = Math.round(29 - Math.sin((x - 22) / 26 * Math.PI) * 9);
-        setPixel(x, y - 1); setPixel(x, y); setPixel(x, y + 1);
-      }
-      for (let x = 79; x <= 105; x++) {
-        let y = Math.round(29 - Math.sin((x - 79) / 26 * Math.PI) * 9);
-        setPixel(x, y - 1); setPixel(x, y); setPixel(x, y + 1);
-      }
-      drawCatMouth(64, 43);
-      drawSafeBlush(19, 36, false);
-      drawSafeBlush(99, 36, true);
-      document.getElementById('syncSummaryText').innerText = "귀여운 눈웃음 표정을 보드에 주입합니다 (깜빡임 지원).";
+else if (mode === 4) {
+    // 4. 귀여운 눈웃음
+    for (let x = 22; x <= 48; x++) {
+      let y = Math.round(27 - Math.sin((x - 22) / 26 * Math.PI) * 9);
+      setPixel(x, y - 1); setPixel(x, y); setPixel(x, y + 1);
     }
+    for (let x = 79; x <= 105; x++) {
+      let y = Math.round(27 - Math.sin((x - 79) / 26 * Math.PI) * 9);
+      setPixel(x, y - 1); setPixel(x, y); setPixel(x, y + 1);
+    }
+    
+    // 앙증맞은 'ㅅ' 입
+    drawCatMouth(64, 43);
+
+    // ★ 케이스 안쪽 안전 구역(눈 아래 볼 위치: x=24, x=96)으로 이동한 볼터치
+    drawSafeBlush(24, 33, false); // 왼쪽 \\\
+    drawSafeBlush(96, 33, true);  // 오른쪽 ///
+    document.getElementById('syncSummaryText').innerText = "귀여운 눈웃음 표정을 보드에 주입합니다 (깜빡임 지원).";
+  }
 
     renderOledGrid();
   }
