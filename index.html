@@ -323,11 +323,11 @@
           <h5>하찮은 멍</h5>
           <span>깜빡임 탑재</span>
         </div>
-        <div class="preset-card" id="cardPreset3" onclick="selectPresetFace(3)">
-          <div class="p-emoji">✨‿✨</div>
-          <h5>상큼한 표정</h5>
-          <span>깜빡임 탑재</span>
-        </div>
+<div class="preset-card" id="cardPreset3" onclick="selectPresetFace(3)">
+  <div class="p-emoji">🤩</div>
+  <h5>상큼한 표정</h5>
+  <span>깜빡임 탑재</span>
+</div>
         <div class="preset-card" id="cardPreset4" onclick="selectPresetFace(4)">
           <div class="p-emoji">^ ω ^</div>
           <h5>귀여운 눈웃음</h5>
@@ -784,6 +784,42 @@
         setPixel(ox,     cy + 2); setPixel(ox + 1, cy + 2);
       }
     }
+  }
+
+// 4점 별빛 눈 래스터라이저 (🤩 이모지 스타일)
+  function drawStarEye(cx, cy) {
+    const starWidths = [9, 8, 6, 4, 3, 2, 2, 1, 1, 0]; // 중심에서 상하로 멀어질 때의 좌우 폭
+    for (let dy = -9; dy <= 9; dy++) {
+      let w = starWidths[Math.abs(dy)];
+      for (let dx = -w; dx <= w; dx++) {
+        setPixel(cx + dx, cy + dy, 1);
+      }
+    }
+    // 대각선 보조 스파클 포인트 (반짝임 극대화)
+    setPixel(cx - 5, cy - 5, 1);
+    setPixel(cx + 5, cy - 5, 1);
+    setPixel(cx - 5, cy + 5, 1);
+    setPixel(cx + 5, cy + 5, 1);
+  }
+
+  // selectPresetFace 함수 내부의 mode === 3 교체:
+  else if (mode === 3) {
+    // 3. 상큼한 표정 (🤩 반짝이는 별빛 눈 + 활짝 웃는 미소)
+    drawStarEye(35, 29);
+    drawStarEye(92, 29);
+
+    // 시원하고 밝게 벌린 D자형 미소 입
+    for (let x = 58; x <= 70; x++) setPixel(x, 39);
+    for (let y = 40; y <= 43; y++) {
+      for (let x = 59; x <= 69; x++) setPixel(x, y);
+    }
+    for (let x = 61; x <= 67; x++) setPixel(x, 44);
+
+    // 볼터치
+    drawSafeBlush(22, 34, false);
+    drawSafeBlush(98, 34, true);
+
+    document.getElementById('syncSummaryText').innerText = "상큼한 표정(별빛 눈)을 보드에 주입합니다 (깜빡임 지원).";
   }
 
   function setPixel(x, y, color = 1) {
