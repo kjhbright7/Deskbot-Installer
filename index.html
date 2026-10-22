@@ -403,23 +403,33 @@
     </div>
   </div>
 
-  <!-- [탭 6] 💬 웹 채팅 및 원격 리모컨 탭 -->
+<!-- [탭 6] 💬 실시간 메시지/채팅 탭 -->
   <div id="tab-chat" class="tab-content">
-    <h3 style="margin-bottom: 6px;">💬 DeskPet 웹 메신저 & 원격 제어</h3>
-    <p style="color: var(--muted); font-size: 13px; margin-bottom: 16px;">
-      상대방의 DeskPet 기기로 실시간 편지와 반응을 보냅니다.
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
+      <h3 style="margin:0;">💬 실시간 메시지 대화방</h3>
+      <span id="mqttStatusBadge" style="font-size:11px; font-weight:700; color:var(--red); background:#0f172a; padding:4px 10px; border-radius:12px; border:1px solid var(--border);">● 채팅 서버 오프라인</span>
+    </div>
+    <p style="color: var(--muted); font-size: 13px; margin-bottom: 14px;">
+      상대방 DeskPet과 실시간으로 주고받은 편지 내역입니다.
     </p>
 
-    <div class="init-form-group">
-      <div class="init-field">
-        <label>보낼 메시지 입력 (한글/영문 지원)</label>
-        <textarea id="chatInputMsg" rows="3" placeholder="예: 오늘 저녁 맛있는 거 먹자!"></textarea>
+    <!-- 대화 메시지 로그 뷰어 -->
+    <div id="chatHistoryBox" style="height: 240px; background: #0b1120; border: 1px solid var(--border); border-radius: 14px; padding: 14px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px;">
+      <div style="text-align: center; color: var(--muted); font-size: 11px;">
+        💡 2번 탭에서 커플 코드와 닉네임을 설정한 뒤 전송하면 대화 내역이 실시간 기록됩니다.
       </div>
-      <button class="btn-init-send" onclick="sendDeskPetMessage()">
-        💌 상대방 DeskPet으로 편지 전송
-      </button>
+    </div>
 
-      <div style="margin-top: 14px;">
+    <!-- 메시지 입력창 -->
+    <div class="init-form-group">
+      <div style="display: flex; gap: 8px;">
+        <input type="text" id="chatInputMsg" placeholder="상대방에게 보낼 메시지 입력 (한글/영문 지원)" style="flex: 1; padding: 12px 14px; background: #0f172a; border: 1px solid var(--border); border-radius: 10px; color: #fff; font-size: 13px;" onkeypress="if(event.keyCode===13) sendDeskPetMessage()">
+        <button class="btn-init-send" onclick="sendDeskPetMessage()" style="margin: 0; padding: 0 20px; white-space: nowrap;">
+          전송 🚀
+        </button>
+      </div>
+
+      <div style="margin-top: 10px;">
         <label style="font-size: 12px; font-weight: 700; color: var(--accent);">💖 즉시 반응 보내기</label>
         <div class="chat-action-grid">
           <button class="btn-chat-cmd" onclick="sendDeskPetCmd('#CMD:HEART')">❤️ 하트</button>
@@ -427,17 +437,8 @@
           <button class="btn-chat-cmd" onclick="sendDeskPetCmd('#CMD:KNOCK')">🚨 똑똑(긴급)</button>
         </div>
       </div>
-
-      <!-- 외부 전용 리모컨 웹 바로가기 안내 -->
-      <div style="margin-top: 18px; padding-top: 14px; border-top: 1px dashed var(--border); display: flex; justify-content: space-between; align-items: center;">
-        <span style="font-size: 12px; color: var(--muted);">스마트폰 전용 외부 리모컨 페이지:</span>
-        <button onclick="window.open('./remote.html', '_blank')" style="background: #334155; border: 1px solid var(--accent); color: var(--accent); padding: 8px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer;">
-          📱 외부 채팅 웹 열기 ↗
-        </button>
-      </div>
     </div>
   </div>
-
   <!-- 조건부 주입 카드 -->
   <div id="syncCard">
     <h4 style="margin-bottom: 6px; color: var(--accent);">⚡ 맞춤 표정 & 기능 설정 기기로 전송</h4>
@@ -970,14 +971,117 @@
     }
   }
 
-  // ---------------- [4. 웹 브라우저 실시간 채팅 & 반응 MQTT 로직] ----------------
+// ---------------- [4. 웹 브라우저 실시간 채팅 & 양방향 MQTT] ----------------
   let mqttClient = null;
+  let isMqttSubscribed = false;
 
-  function getMqttClient() {
-    if (mqttClient && mqttClient.connected) return mqttClient;
-    // HiveMQ 공개 웹소켓 브로커에 접속 (포트 8884 wss)
-    mqttClient = mqtt.connect('wss://broker.hivemq.com:8884/mqtt');
-    return mqttClient;
+  function initMqttChat() {
+    const code = document.getElementById('initPairCode').value.trim().toUpperCase();
+    const myName = document.getElementById('initMyName').value.trim().toUpperCase();
+    const partner = document.getElementById('initPartnerName').value.trim().toUpperCase();
+
+    if (!code || !myName || !partner) return;
+
+    if (!mqttClient) {
+      // HiveMQ 공개 웹소켓 브로커 연결 (포트 8884 SSL)
+      mqttClient = mqtt.connect('wss://broker.hivemq.com:8884/mqtt', {
+        clientId: 'WebClient_' + Math.random().toString(16).substr(2, 8)
+      });
+
+      mqttClient.on('connect', () => {
+        const badge = document.getElementById('mqttStatusBadge');
+        if (badge) {
+          badge.innerText = '● 채팅 서버 온라인';
+          badge.style.color = '#22c55e';
+          badge.style.borderColor = '#22c55e';
+        }
+        // 내가 받는 토픽 & 상대방이 받는 토픽 모두 구독 (양방향 대화 기록 수신)
+        const mySubTopic = `deskpet_2026/${code}/dev_${myName}`;
+        const partnerSubTopic = `deskpet_2026/${code}/dev_${partner}`;
+        
+        mqttClient.subscribe([mySubTopic, partnerSubTopic], { qos: 1 });
+      });
+
+      mqttClient.on('message', (topic, payload) => {
+        const msgStr = payload.toString();
+        const code = document.getElementById('initPairCode').value.trim().toUpperCase();
+        const myName = document.getElementById('initMyName').value.trim().toUpperCase();
+        const partner = document.getElementById('initPartnerName').value.trim().toUpperCase();
+
+        const myTopic = `deskpet_2026/${code}/dev_${myName}`;
+        const partnerTopic = `deskpet_2026/${code}/dev_${partner}`;
+
+        if (msgStr.startsWith('#CMD:')) {
+          let actName = "반응";
+          if (msgStr === '#CMD:HEART') actName = "❤️ 하트";
+          else if (msgStr === '#CMD:TICKLE') actName = "😆 간질이기";
+          else if (msgStr === '#CMD:KNOCK') actName = "🚨 긴급 똑똑";
+
+          if (topic === partnerTopic) appendChatMessage(myName, actName, true, true);
+          else if (topic === myTopic) appendChatMessage(partner, actName, false, true);
+          return;
+        }
+
+        // 일반 메시지: #MSG: 또는 #msg: 접두사 제거 후 표시
+        let cleanText = msgStr;
+        if (cleanText.toUpperCase().startsWith('#MSG:')) {
+          cleanText = cleanText.substring(5);
+        }
+
+        if (topic === partnerTopic) {
+          // 내가 상대방에게 보낸 메시지
+          appendChatMessage(myName, cleanText, true);
+        } else if (topic === myTopic) {
+          // 상대방이 나에게 보낸 메시지
+          appendChatMessage(partner, cleanText, false);
+        }
+      });
+    }
+  }
+
+  function appendChatMessage(sender, text, isMe, isAction = false) {
+    const box = document.getElementById('chatHistoryBox');
+    if (!box) return;
+
+    const row = document.createElement('div');
+    row.style.display = 'flex';
+    row.style.flexDirection = 'column';
+    row.style.alignItems = isMe ? 'flex-end' : 'flex-start';
+
+    const nameLabel = document.createElement('span');
+    nameLabel.style.fontSize = '10px';
+    nameLabel.style.color = 'var(--muted)';
+    nameLabel.style.marginBottom = '2px';
+    nameLabel.innerText = sender;
+
+    const bubble = document.createElement('div');
+    bubble.style.padding = '8px 12px';
+    bubble.style.borderRadius = '12px';
+    bubble.style.fontSize = '13px';
+    bubble.style.maxWidth = '75%';
+    bubble.style.wordBreak = 'break-word';
+
+    if (isAction) {
+      bubble.style.background = 'rgba(56, 189, 248, 0.15)';
+      bubble.style.border = '1px solid var(--accent)';
+      bubble.style.color = '#38bdf8';
+      bubble.style.fontWeight = '700';
+    } else if (isMe) {
+      bubble.style.background = '#38bdf8';
+      bubble.style.color = '#0f172a';
+      bubble.style.fontWeight = '600';
+    } else {
+      bubble.style.background = '#1e293b';
+      bubble.style.color = '#f8fafc';
+      bubble.style.border = '1px solid var(--border)';
+    }
+
+    bubble.innerText = text;
+
+    row.appendChild(nameLabel);
+    row.appendChild(bubble);
+    box.appendChild(row);
+    box.scrollTop = box.scrollHeight; // 항상 최신 글 스크롤
   }
 
   function sendDeskPetMessage() {
@@ -986,21 +1090,17 @@
     const msg = document.getElementById('chatInputMsg').value.trim();
 
     if (!code || !partner) {
-      alert("먼저 2번 탭에서 커플 연동 코드와 상대방 닉네임을 입력해 주세요.");
+      alert("먼저 2번 탭에서 커플 연동 코드와 상대방 닉네임을 설정해 주세요.");
       return;
     }
-    if (!msg) {
-      alert("보낼 메시지를 입력해 주세요.");
-      return;
-    }
+    if (!msg) return;
 
-    const client = getMqttClient();
+    initMqttChat();
     const targetTopic = `deskpet_2026/${code}/dev_${partner}`;
     const payload = `#MSG:${msg}`;
 
-    client.publish(targetTopic, payload, { qos: 1 }, (err) => {
+    mqttClient.publish(targetTopic, payload, { qos: 1 }, (err) => {
       if (!err) {
-        alert("💌 상대방 DeskPet으로 편지가 전송되었습니다!");
         document.getElementById('chatInputMsg').value = '';
       } else {
         alert("전송 실패: " + err.message);
@@ -1013,22 +1113,24 @@
     const partner = document.getElementById('initPartnerName').value.trim().toUpperCase();
 
     if (!code || !partner) {
-      alert("먼저 2번 탭에서 커플 연동 코드와 상대방 닉네임을 입력해 주세요.");
+      alert("먼저 2번 탭에서 커플 연동 코드와 상대방 닉네임을 설정해 주세요.");
       return;
     }
 
-    const client = getMqttClient();
+    initMqttChat();
     const targetTopic = `deskpet_2026/${code}/dev_${partner}`;
 
-    client.publish(targetTopic, cmdStr, { qos: 1 }, (err) => {
-      if (!err) {
-        alert(`⚡ [${cmdStr}] 반응이 상대방 DeskPet으로 전송되었습니다!`);
-      } else {
-        alert("전송 실패: " + err.message);
-      }
-    });
+    mqttClient.publish(targetTopic, cmdStr, { qos: 1 });
   }
 
+  // 6번 탭 클릭 시 자동으로 MQTT 접속 연결
+  const origOpenTab = openTab;
+  openTab = function(tabId) {
+    origOpenTab(tabId);
+    if (tabId === 'tab-chat') {
+      initMqttChat();
+    }
+  };
   selectPresetFace(1);
 </script>
 </body>
