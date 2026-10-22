@@ -1,552 +1,88 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DeskPet 커스텀 스튜디오</title>
-  <script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
-  <style>
-    :root {
-      --bg: #0f172a;
-      --card: #1e293b;
-      --border: #334155;
-      --accent: #38bdf8;
-      --green: #22c55e;
-      --red: #ef4444;
-      --text: #f8fafc;
-      --muted: #94a3b8;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background-color: var(--bg); color: var(--text); padding: 30px 16px; display: flex; justify-content: center; }
-    .container { max-width: 680px; width: 100%; }
-    
-    header { text-align: center; margin-bottom: 20px; }
-    header h1 { font-size: 26px; color: var(--accent); margin-bottom: 6px; }
-    header p { color: var(--muted); font-size: 14px; }
+// ---------------- [U8g2 엔진 100% 동기화 드로잉 엔진] ----------------
 
-    /* 연결 상태 대시보드 */
-    .connection-status-card {
-      background: #0b1120;
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 14px 20px;
-      margin-bottom: 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .device-info { display: flex; align-items: center; gap: 12px; }
-    .device-icon { font-size: 26px; background: #1e293b; padding: 8px; border-radius: 12px; border: 1px solid var(--border); }
-    .device-text h4 { font-size: 15px; margin-bottom: 2px; }
-    .device-text p { font-size: 12px; color: var(--muted); }
-    
-    .status-badge {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      background: #1e293b;
-      padding: 8px 16px;
-      border-radius: 20px;
-      font-size: 13px;
-      font-weight: 700;
-      border: 1px solid var(--border);
-    }
-    .status-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: var(--red);
-      box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
-      transition: 0.3s;
-    }
-    .status-dot.connected {
-      background: var(--green);
-      box-shadow: 0 0 10px rgba(34, 197, 94, 0.8);
-      animation: pulse 1.5s infinite;
-    }
-    @keyframes pulse {
-      0% { transform: scale(0.95); opacity: 0.8; }
-      50% { transform: scale(1.15); opacity: 1; }
-      100% { transform: scale(0.95); opacity: 0.8; }
-    }
+  // U8g2의 drawDisc(원형 채우기)와 1:1 일치하는 정수 원 래스터라이저 (십자 돌기 제거)
+  function drawU8g2Disc(cx, cy, r, color = 1) {
+    let f = 1 - r;
+    let ddF_x = 1;
+    let ddF_y = -2 * r;
+    let x = 0;
+    let y = r;
 
-    /* 상단 탭 메뉴 */
-    .tabs { display: flex; gap: 8px; margin-bottom: 20px; background: #0b1120; padding: 6px; border-radius: 14px; border: 1px solid var(--border); }
-    .tab-btn { flex: 1; padding: 10px; background: transparent; border: none; color: var(--muted); font-weight: 700; font-size: 14px; border-radius: 10px; cursor: pointer; transition: 0.2s; }
-    .tab-btn.active { background: var(--card); color: var(--accent); }
+    // 중앙 수직선 채우기
+    drawVLine(cx, cy - r, 2 * r + 1, color);
 
-    .tab-content { display: none; background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 24px; margin-bottom: 24px; }
-    .tab-content.active { display: block; }
+    while (x < y) {
+      if (f >= 0) {
+        y--;
+        ddF_y += 2;
+        f += ddF_y;
+      }
+      x++;
+      ddF_x += 2;
+      f += ddF_x;
 
-    /* 1번 탭 버튼 분리 카드 */
-    .flash-action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 16px; }
-    .action-box {
-      background: #0f172a;
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 18px;
-      text-align: center;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      gap: 12px;
-    }
-    .action-box h4 { font-size: 15px; color: var(--accent); }
-    .action-box p { font-size: 12px; color: var(--muted); line-height: 1.5; }
-    .btn-connect-step {
-      background: #334155;
-      border: 1px solid var(--border);
-      color: #fff;
-      padding: 12px;
-      border-radius: 10px;
-      font-size: 14px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: 0.2s;
-    }
-    .btn-connect-step:hover { background: #475569; }
-    .btn-connect-step.is-on { background: rgba(34, 197, 94, 0.2); border-color: var(--green); color: var(--green); }
-
-    /* 표정 선택 서브 탭 (깜빡임 있음 vs 커스텀 고정) */
-    .face-category-tabs {
-      display: flex;
-      gap: 8px;
-      background: #0f172a;
-      padding: 4px;
-      border-radius: 12px;
-      margin-bottom: 18px;
-      border: 1px solid var(--border);
-    }
-    .cat-btn {
-      flex: 1;
-      padding: 8px 12px;
-      background: transparent;
-      border: none;
-      color: var(--muted);
-      font-weight: 700;
-      font-size: 13px;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: 0.2s;
-    }
-    .cat-btn.active {
-      background: #1e293b;
-      color: var(--accent);
-      border: 1px solid var(--accent);
-    }
-
-    /* 프리셋 그리드 (4종) */
-    .preset-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px; }
-    .preset-card {
-      background: #0f172a;
-      border: 2px solid var(--border);
-      border-radius: 12px;
-      padding: 14px 8px;
-      text-align: center;
-      cursor: pointer;
-      transition: 0.2s;
-    }
-    .preset-card:hover { border-color: var(--accent); transform: translateY(-2px); }
-    .preset-card.active { border-color: var(--accent); background: rgba(56, 189, 248, 0.1); }
-    .preset-card .p-emoji { font-size: 26px; margin-bottom: 6px; }
-    .preset-card h5 { font-size: 13px; color: var(--text); margin-bottom: 3px; }
-    .preset-card span { font-size: 10px; color: var(--green); font-weight: 700; }
-
-    /* 화면 가이드 모드 선택기 */
-    .mode-select-box { display: flex; gap: 8px; margin-bottom: 12px; }
-    .mode-btn {
-      flex: 1;
-      background: #0f172a;
-      border: 1px solid var(--border);
-      color: var(--muted);
-      font-size: 12px;
-      font-weight: 700;
-      padding: 8px;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-    .mode-btn.active { background: var(--accent); color: #0f172a; }
-
-    /* 캔버스 및 뷰포트 */
-    .canvas-container { display: flex; flex-direction: column; align-items: center; gap: 12px; }
-    .canvas-viewport {
-      position: relative;
-      border: 3px solid #38bdf8;
-      border-radius: 10px;
-      box-shadow: 0 0 20px rgba(56, 189, 248, 0.2);
-      background: #000;
-      overflow: hidden;
-      line-height: 0;
-    }
-    canvas { cursor: crosshair; image-rendering: pixelated; }
-    
-    .layer-overlay {
-      position: absolute; left: 0; right: 0; pointer-events: none;
-      background: rgba(15, 23, 42, 0.78);
-      border: 1px dashed rgba(56, 189, 248, 0.5);
-      color: #38bdf8; font-size: 11px; font-weight: 700;
-      display: flex; align-items: center; justify-content: center;
-    }
-    .layer-overlay.top { top: 0; height: 40px; border-bottom-style: solid; }
-    .layer-overlay.bottom { bottom: 0; height: 40px; border-top-style: solid; }
-
-    .toolbar { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; width: 100%; }
-    .tool-btn {
-      background: #0f172a; border: 1px solid var(--border); color: var(--text);
-      padding: 8px 12px; border-radius: 8px; font-size: 12px; cursor: pointer; font-weight: 600;
-    }
-    .tool-btn.active { background: var(--accent); color: #0f172a; }
-
-    /* 기능 토글 */
-    .toggle-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--border); }
-    .toggle-info h4 { font-size: 15px; margin-bottom: 4px; }
-    .toggle-info p { font-size: 12px; color: var(--muted); }
-    .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
-    .switch input { opacity: 0; width: 0; height: 0; }
-    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #334155; border-radius: 24px; transition: .3s; }
-    .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; border-radius: 50%; transition: .3s; }
-    input:checked + .slider { background-color: var(--accent); }
-    input:checked + .slider:before { transform: translateX(20px); }
-
-    /* 주입 카드 */
-    #syncCard {
-      display: none; background: #0b1120; border: 1px solid var(--accent);
-      border-radius: 20px; padding: 22px; text-align: center;
-      box-shadow: 0 10px 30px rgba(56, 189, 248, 0.15);
-    }
-    .btn-sync { background: var(--accent); color: #0f172a; border: none; font-weight: 800; font-size: 15px; padding: 14px 28px; border-radius: 12px; cursor: pointer; width: 100%; margin-top: 10px; }
-  </style>
-</head>
-<body>
-
-<div class="container">
-  <header>
-    <h1>🐾 DeskPet Custom Studio</h1>
-    <p>움직이는 감성 표정 & 풀스크린 커스텀 플랫폼</p>
-  </header>
-
-  <!-- 연결 상태 인디케이터 -->
-  <div class="connection-status-card">
-    <div class="device-info">
-      <div class="device-icon">🤖</div>
-      <div class="device-text">
-        <h4 id="deviceTitle">ESP32-C3 미연결</h4>
-        <p id="deviceSubText">USB 케이블 연결 후 1단계 버튼을 눌러주세요</p>
-      </div>
-    </div>
-    <div class="status-badge">
-      <div class="status-dot" id="statusDot"></div>
-      <span id="statusLabel" style="color: var(--muted);">연결 끊김</span>
-    </div>
-  </div>
-
-  <!-- 상단 탭 -->
-  <div class="tabs">
-    <button class="tab-btn active" onclick="openTab('tab-flash')">1. 펌웨어 설치</button>
-    <button class="tab-btn" onclick="openTab('tab-guide')">2. 조립 가이드</button>
-    <button class="tab-btn" onclick="openTab('tab-face')">3. 표정 선택 및 제작</button>
-    <button class="tab-btn" onclick="openTab('tab-feature')">4. 기능 설정</button>
-  </div>
-
-  <!-- 1번 탭 -->
-  <div id="tab-flash" class="tab-content active">
-    <h3 style="margin-bottom: 6px;">엔진 펌웨어 및 기기 연동</h3>
-    <div class="flash-action-grid">
-      <div class="action-box">
-        <h4>1단계: 기기 통신 연결</h4>
-        <p>보드와 브라우저 간의 시리얼 데이터 통신을 연결합니다.</p>
-        <button class="btn-connect-step" id="btnStepConnect" onclick="handleManualConnect()">🔌 기기 시리얼 연결</button>
-      </div>
-      <div class="action-box">
-        <h4>2단계: 펌웨어 다운로드</h4>
-        <p>ESP Web Tools를 통해 보드에 최신 코드를 직접 굽습니다.</p>
-        <div style="display: flex; justify-content: center;">
-          <esp-web-install-button manifest="./manifest.json"></esp-web-install-button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- 2번 탭 -->
-  <div id="tab-guide" class="tab-content">
-    <h3 style="margin-bottom: 10px;">하드웨어 배선 안내</h3>
-    <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
-      <tr style="background:#0f172a; color:var(--accent);"><th style="padding:10px; border:1px solid var(--border);">부품</th><th style="padding:10px; border:1px solid var(--border);">부품 핀</th><th style="padding:10px; border:1px solid var(--border);">ESP32-C3 핀</th></tr>
-      <tr><td style="padding:10px; border:1px solid var(--border);">0.96인치 OLED</td><td style="padding:10px; border:1px solid var(--border);">SDA / SCL</td><td style="padding:10px; border:1px solid var(--border);"><strong>GPIO 8 / GPIO 9</strong></td></tr>
-      <tr><td style="padding:10px; border:1px solid var(--border);">리미트 스위치</td><td style="padding:10px; border:1px solid var(--border);">NO / COM</td><td style="padding:10px; border:1px solid var(--border);"><strong>GPIO 7 / GND</strong></td></tr>
-    </table>
-  </div>
-
-  <!-- [3번 탭] 표정 선택 및 제작 -->
-  <div id="tab-face" class="tab-content">
-    <!-- 서브 카테고리 선택 탭 -->
-    <div class="face-category-tabs">
-      <button class="cat-btn active" id="btnCatPreset" onclick="switchFaceCategory('preset')">
-        ✨ 깜빡임 표정 (기본 4종)
-      </button>
-      <button class="cat-btn" id="btnCatCustom" onclick="switchFaceCategory('custom')">
-        🎨 직접 그리기 & PNG (고정)
-      </button>
-    </div>
-
-    <!-- [섹션 A] 깜빡임 지원 프리셋 4종 -->
-    <div id="sectionPreset">
-      <p style="color: var(--muted); font-size: 13px; margin-bottom: 12px;">
-        3.2초마다 눈을 깜빡이는 생동감 있는 표정들입니다. 원하는 표정을 클릭해 보세요.
-      </p>
-
-      <div class="preset-grid">
-        <div class="preset-card active" id="cardPreset1" onclick="selectPresetFace(1)">
-          <div class="p-emoji">👀</div>
-          <h5>기본 동글눈</h5>
-          <span>깜빡임 탑재</span>
-        </div>
-        <div class="preset-card" id="cardPreset2" onclick="selectPresetFace(2)">
-          <div class="p-emoji">• _ •</div>
-          <h5>하찮은 멍</h5>
-          <span>깜빡임 탑재</span>
-        </div>
-        <div class="preset-card" id="cardPreset3" onclick="selectPresetFace(3)">
-          <div class="p-emoji">◕‿◕</div>
-          <h5>상큼한 표정</h5>
-          <span>깜빡임 탑재</span>
-        </div>
-        <div class="preset-card" id="cardPreset4" onclick="selectPresetFace(4)">
-          <div class="p-emoji">^ ω ^</div>
-          <h5>귀여운 눈웃음</h5>
-          <span>깜빡임 탑재</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- [섹션 B] 화면 에디터 (커스텀 시에는 깜빡임 없음 안내 표시) -->
-    <div id="sectionCustomNotice" style="display: none; margin-bottom: 10px; background: rgba(56, 189, 248, 0.1); border: 1px solid var(--accent); padding: 10px; border-radius: 8px; font-size: 12px; color: var(--accent);">
-      ℹ️ 사용자가 직접 그리거나 PNG로 불러온 커스텀 화면은 도트 손상을 방지하기 위해 <strong>깜빡임 없이 고정</strong>으로 출력됩니다.
-    </div>
-
-    <div class="mode-select-box">
-      <button class="mode-btn active" id="btnModeLayerOn" onclick="setScreenMode(true)">🛡️ 상하단 레이어 있음 (128×44)</button>
-      <button class="mode-btn" id="btnModeLayerOff" onclick="setScreenMode(false)">🖥️ 상하단 레이어 없음 (풀 128×64)</button>
-    </div>
-
-    <!-- 캔버스 및 뷰포트 -->
-    <div class="canvas-container">
-      <div class="canvas-viewport">
-        <canvas id="oledCanvas" width="512" height="256"></canvas>
-        <div class="layer-overlay top" id="layerTop">📶 Wi-Fi & 시간 레이어 영역</div>
-        <div class="layer-overlay bottom" id="layerBottom">📅 D-Day & 날짜 레이어 영역</div>
-      </div>
-
-      <div class="toolbar">
-        <button class="tool-btn active" id="toolPen" onclick="setTool('pen')">✏️ 펜</button>
-        <button class="tool-btn" id="toolEraser" onclick="setTool('eraser')">🧹 지우개</button>
-        <button class="tool-btn" onclick="clearOledCanvas()">🗑️ 비우기</button>
-        <button class="tool-btn" onclick="invertOledCanvas()">🌓 반전</button>
-      </div>
-
-      <div style="width: 100%; display: flex; align-items: center; justify-content: space-between; background: #0f172a; padding: 10px 14px; border-radius: 10px; border: 1px dashed var(--border); font-size: 12px;">
-        <label style="background: #334155; border: 1px solid var(--accent); color: var(--accent); padding: 6px 12px; border-radius: 6px; cursor: pointer;" for="imgFileInput">📁 PNG 이미지 변환</label>
-        <input type="file" id="imgFileInput" accept="image/*" style="display:none;" onchange="handleImageUpload(event)">
-        <div style="display:flex; align-items:center; gap:6px;">
-          <span style="color:var(--muted);">대비:</span>
-          <input type="range" id="thresholdSlider" min="10" max="245" value="128" oninput="reprocessUploadedImage()" style="width:90px; accent-color:var(--accent);">
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- 4번 탭 -->
-  <div id="tab-feature" class="tab-content">
-    <h3 style="margin-bottom: 14px;">기능 On / Off 토글</h3>
-    <div class="toggle-row">
-      <div class="toggle-info">
-        <h4>시계 모드 활성화</h4>
-        <p>1회 클릭 시 로컬 디지털 시계 표시 허용</p>
-      </div>
-      <label class="switch"><input type="checkbox" id="toggleTime" checked><span class="slider"></span></label>
-    </div>
-    <div class="toggle-row">
-      <div class="toggle-info">
-        <h4>달력 모드 활성화</h4>
-        <p>연속 클릭 시 월간 캘린더 화면 전환 허용</p>
-      </div>
-      <label class="switch"><input type="checkbox" id="toggleCalendar" checked><span class="slider"></span></label>
-    </div>
-    <div class="toggle-row">
-      <div class="toggle-info">
-        <h4>기본 상/하단 바 오버레이</h4>
-        <p>화면 위에 Wi-Fi 안테나와 D-Day 표시 유지</p>
-      </div>
-      <label class="switch"><input type="checkbox" id="toggleOverlay" checked><span class="slider"></span></label>
-    </div>
-  </div>
-
-  <!-- 조건부 주입 카드 -->
-  <div id="syncCard">
-    <h4 style="margin-bottom: 6px; color: var(--accent);">⚡ 맞춤 표정 & 기능 설정 기기로 전송</h4>
-    <p style="color: var(--muted); font-size: 13px;" id="syncSummaryText">
-      현재 선택된 표정과 옵션을 보드의 비휘발성 플래시에 즉시 굽습니다.
-    </p>
-    <button class="btn-sync" onclick="sendFullCanvasToDevice()">기기로 설정 주입하기</button>
-  </div>
-</div>
-
-<script>
-  let activePort = null;
-  let activeAnimMode = 1; // 1: 기본동글눈, 2: 하찮은멍, 3: 상큼한표정, 4: 눈웃음, 0: 커스텀고정
-
-  function openTab(tabId) {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-    event.currentTarget.classList.add('active');
-    document.getElementById(tabId).classList.add('active');
-
-    const syncCard = document.getElementById('syncCard');
-    if (tabId === 'tab-face' || tabId === 'tab-feature') syncCard.style.display = 'block';
-    else syncCard.style.display = 'none';
-  }
-
-  // 표정 서브 카테고리 전환
-  function switchFaceCategory(cat) {
-    const btnPreset = document.getElementById('btnCatPreset');
-    const btnCustom = document.getElementById('btnCatCustom');
-    const secPreset = document.getElementById('sectionPreset');
-    const secNotice = document.getElementById('sectionCustomNotice');
-
-    if (cat === 'preset') {
-      btnPreset.classList.add('active');
-      btnCustom.classList.remove('active');
-      secPreset.style.display = 'block';
-      secNotice.style.display = 'none';
-      selectPresetFace(1);
-    } else {
-      btnCustom.classList.add('active');
-      btnPreset.classList.remove('active');
-      secPreset.style.display = 'none';
-      secNotice.style.display = 'block';
-      activeAnimMode = 0; // 커스텀 모드 지정 (깜빡임 차단)
-      document.querySelectorAll('.preset-card').forEach(c => c.classList.remove('active'));
-      document.getElementById('syncSummaryText').innerText = "사용자가 디자인한 128x64 고정 화면을 보드에 주입합니다 (깜빡임 없음).";
+      drawVLine(cx + x, cy - y, 2 * y + 1, color);
+      drawVLine(cx - x, cy - y, 2 * y + 1, color);
+      drawVLine(cx + y, cy - x, 2 * x + 1, color);
+      drawVLine(cx - y, cy - x, 2 * x + 1, color);
     }
   }
 
-  // ---------------- [Web Serial 통신] ----------------
-  async function handleManualConnect() {
-    if (!("serial" in navigator)) {
-      alert("PC 크롬(Chrome) 또는 엣지(Edge) 브라우저를 이용해 주세요.");
-      return;
-    }
-    if (activePort) {
-      try { await activePort.close(); } catch (e) {}
-      activePort = null;
-      updateConnectionUI(false);
-      return;
-    }
-    try {
-      activePort = await navigator.serial.requestPort();
-      await activePort.open({ baudRate: 115200 });
-      updateConnectionUI(true);
-      activePort.ondisconnect = () => { activePort = null; updateConnectionUI(false); };
-    } catch (err) {
-      console.warn("연결 오류:", err);
-      updateConnectionUI(false);
-    }
-  }
-
-  function updateConnectionUI(isConnected) {
-    const dot = document.getElementById('statusDot');
-    const label = document.getElementById('statusLabel');
-    const title = document.getElementById('deviceTitle');
-    const subText = document.getElementById('deviceSubText');
-    const btn = document.getElementById('btnStepConnect');
-
-    if (isConnected) {
-      dot.classList.add('connected');
-      label.innerText = '온라인 (정상)';
-      label.style.color = '#22c55e';
-      title.innerText = 'ESP32-C3 DeskPet 연결됨';
-      subText.innerText = '양방향 데이터 통신이 활성화되었습니다.';
-      if (btn) { btn.innerText = '✅ 연결 완료 (해제 클릭)'; btn.classList.add('is-on'); }
-    } else {
-      dot.classList.remove('connected');
-      label.innerText = '연결 끊김';
-      label.style.color = 'var(--muted)';
-      title.innerText = 'ESP32-C3 미연결';
-      subText.innerText = 'USB 케이블 연결 후 1단계 버튼을 눌러주세요';
-      if (btn) { btn.innerText = '🔌 기기 시리얼 연결'; btn.classList.remove('is-on'); }
-    }
-  }
-
-  // ---------------- [128x64 풀 도트 캔버스 엔진] ----------------
-  const canvas = document.getElementById('oledCanvas');
-  const ctx = canvas.getContext('2d');
-  const OLED_W = 128;
-  const OLED_H = 64;
-  const SCALE = 4;
-
-  let oledGrid = Array(OLED_H).fill(0).map(() => Array(OLED_W).fill(0));
-  let isPainting = false;
-  let currentTool = 'pen';
-  let uploadedImgObj = null;
-
-  function renderOledGrid() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    for (let y = 0; y < OLED_H; y++) {
-      for (let x = 0; x < OLED_W; x++) {
-        ctx.fillStyle = oledGrid[y][x] ? "#38bdf8" : "#090d16";
-        ctx.fillRect(x * SCALE, y * SCALE, SCALE - 0.5, SCALE - 0.5);
+  function drawVLine(x, y, len, color) {
+    for (let i = 0; i < len; i++) {
+      let py = y + i;
+      if (x >= 0 && x < OLED_W && py >= 0 && py < OLED_H) {
+        oledGrid[py][x] = color;
       }
     }
   }
 
-  function setScreenMode(hasLayer) {
-    document.getElementById('btnModeLayerOn').classList.toggle('active', hasLayer);
-    document.getElementById('btnModeLayerOff').classList.toggle('active', !hasLayer);
-    document.getElementById('layerTop').style.display = hasLayer ? 'flex' : 'none';
-    document.getElementById('layerBottom').style.display = hasLayer ? 'flex' : 'none';
-    document.getElementById('toggleOverlay').checked = hasLayer;
+  // ★ OLED 실물 사진과 100% 똑같이 나오는 귀여운 곡선 냥이 입 (ㅅ)
+  function drawCatMouth(cx, cy) {
+    // 왼쪽 호 (Lower Right)
+    const leftArc = [
+      {dx: -5, dy: 0}, {dx: -4, dy: 1}, {dx: -3, dy: 2}, 
+      {dx: -2, dy: 3}, {dx: -1, dy: 4}, {dx: 0, dy: 4}
+    ];
+    // 오른쪽 호 (Lower Left)
+    const rightArc = [
+      {dx: 0, dy: 4}, {dx: 1, dy: 4}, {dx: 2, dy: 3}, 
+      {dx: 3, dy: 2}, {dx: 4, dy: 1}, {dx: 5, dy: 0}
+    ];
+
+    leftArc.forEach(p => {
+      let px = (cx - 5) + p.dx;
+      let py = (cy - 4) + p.dy;
+      if (px >= 0 && px < OLED_W && py >= 0 && py < OLED_H) oledGrid[py][px] = 1;
+    });
+
+    rightArc.forEach(p => {
+      let px = (cx + 5) + p.dx;
+      let py = (cy - 4) + p.dy;
+      if (px >= 0 && px < OLED_W && py >= 0 && py < OLED_H) oledGrid[py][px] = 1;
+    });
   }
 
-  function setTool(tool) {
-    currentTool = tool;
-    document.getElementById('toolPen').classList.toggle('active', tool === 'pen');
-    document.getElementById('toolEraser').classList.toggle('active', tool === 'eraser');
-  }
-
-  function drawPixelAt(e) {
-    const rect = canvas.getBoundingClientRect();
-    const x = Math.floor((e.clientX - rect.left) / SCALE);
-    const y = Math.floor((e.clientY - rect.top) / SCALE);
-
-    if (x >= 0 && x < OLED_W && y >= 0 && y < OLED_H) {
-      oledGrid[y][x] = (currentTool === 'pen') ? 1 : 0;
-      renderOledGrid();
-      // 직접 손으로 그리기 시작하면 커스텀 고정 모드로 자동 전환
-      if (activeAnimMode !== 0) {
-        activeAnimMode = 0;
-        document.querySelectorAll('.preset-card').forEach(c => c.classList.remove('active'));
-        document.getElementById('syncSummaryText').innerText = "사용자가 디자인한 128x64 고정 화면을 보드에 주입합니다 (깜빡임 없음).";
+  // 케이스 베젤에 절대 가려지지 않는 안전 영역 볼터치 (두께감 있는 빗금)
+  function drawSafeBlush(cx, cy, isRight = false) {
+    for (let i = 0; i < 3; i++) {
+      let ox = cx + (i * 3);
+      let oy = cy;
+      if (isRight) {
+        // 오른쪽 볼터치 (///)
+        setPixel(ox, oy); setPixel(ox + 1, oy - 1); setPixel(ox + 2, oy - 2);
+      } else {
+        // 왼쪽 볼터치 (\\\)
+        setPixel(ox + 2, oy); setPixel(ox + 1, oy - 1); setPixel(ox, oy - 2);
       }
     }
   }
 
-  canvas.addEventListener('mousedown', (e) => { isPainting = true; drawPixelAt(e); });
-  canvas.addEventListener('mousemove', (e) => { if (isPainting) drawPixelAt(e); });
-  window.addEventListener('mouseup', () => isPainting = false);
-
-  function clearOledCanvas() {
-    oledGrid = Array(OLED_H).fill(0).map(() => Array(OLED_W).fill(0));
-    renderOledGrid();
+  function setPixel(x, y, color = 1) {
+    if (x >= 0 && x < OLED_W && y >= 0 && y < OLED_H) oledGrid[y][x] = color;
   }
 
-  function invertOledCanvas() {
-    for (let y = 0; y < OLED_H; y++) {
-      for (let x = 0; x < OLED_W; x++) oledGrid[y][x] = oledGrid[y][x] ? 0 : 1;
-    }
-    renderOledGrid();
-  }
-
-  // ---------------- [개선된 4종 프리셋 렌더링 로직] ----------------
+  // ---------------- [프리셋 4종 정밀 렌더링] ----------------
   function selectPresetFace(mode) {
     activeAnimMode = mode;
     clearOledCanvas();
@@ -556,187 +92,58 @@
     });
 
     if (mode === 1) {
-      // 1. 기본 동글눈 (시그니처: 둥근 눈 + 동공 하이라이트 + 뺴꼼 냥이 입)
-      drawFillCircle(35, 29, 12);
-      drawFillCircle(92, 29, 12);
-      drawFillCircle(31, 25, 4, 0); // 큰 하이라이트 비우기
-      drawFillCircle(88, 25, 4, 0);
-      drawFillCircle(39, 33, 2, 0); // 보조 반짝이
-      drawFillCircle(96, 33, 2, 0);
+      // 1. 기본 동글눈 (OLED 실물과 1:1 완벽 일치)
+      drawU8g2Disc(35, 29, 12, 1);
+      drawU8g2Disc(92, 29, 12, 1);
+      drawU8g2Disc(31, 25, 4, 0); // 큰 하이라이트
+      drawU8g2Disc(88, 25, 4, 0);
+      drawU8g2Disc(39, 33, 2, 0); // 작은 하이라이트
+      drawU8g2Disc(96, 33, 2, 0);
+
+      // 귀여운 곡선 냥이 입 (ㅅ)
       drawCatMouth(64, 43);
       document.getElementById('syncSummaryText').innerText = "기본 동글눈 표정을 보드에 주입합니다 (깜빡임 지원).";
     }
     else if (mode === 2) {
-      // 2. 하찮은 멍 (점눈 • • + 일자 입)
-      drawFillCircle(34, 28, 4);
-      drawFillCircle(93, 28, 4);
-      for (let x = 60; x <= 68; x++) { oledGrid[40][x] = 1; oledGrid[41][x] = 1; }
+      // 2. 하찮은 멍 (점눈 + 일자 입)
+      drawU8g2Disc(34, 28, 4, 1);
+      drawU8g2Disc(93, 28, 4, 1);
+      for (let x = 60; x <= 68; x++) { setPixel(x, 40); setPixel(x, 41); }
       document.getElementById('syncSummaryText').innerText = "하찮은 멍 표정을 보드에 주입합니다 (깜빡임 지원).";
     }
     else if (mode === 3) {
-      // 3. 상큼한 표정 (양쪽 눈 모두 둥글고 똘망똘망 + 환한 미소 입)
-      drawFillCircle(35, 29, 10);
-      drawFillCircle(92, 29, 10);
-      drawFillCircle(33, 26, 3, 0); // 동공 반짝이
-      drawFillCircle(90, 26, 3, 0);
-      // 밝게 웃는 곡선 입 (D)
-      for (let x = 58; x <= 70; x++) oledGrid[39][x] = 1;
-      for (let y = 40; y <= 44; y++) {
-        for (let x = 60; x <= 68; x++) oledGrid[y][x] = 1;
+      // 3. 상큼한 표정 (안전 영역 볼터치 포함)
+      drawU8g2Disc(35, 29, 10, 1);
+      drawU8g2Disc(92, 29, 10, 1);
+      drawU8g2Disc(33, 26, 3, 0);
+      drawU8g2Disc(90, 26, 3, 0);
+
+      // 활짝 웃는 입 (D)
+      for (let x = 58; x <= 70; x++) setPixel(x, 39);
+      for (let y = 40; y <= 43; y++) {
+        for (let x = 60; x <= 68; x++) setPixel(x, y);
       }
-      drawBlush(15, 34); drawBlush(105, 34);
+      // 케이스 베젤에 닿지 않도록 눈 바로 바깥쪽(x=20, x=98)에 배치
+      drawSafeBlush(20, 36, false);
+      drawSafeBlush(98, 36, true);
       document.getElementById('syncSummaryText').innerText = "상큼한 표정을 보드에 주입합니다 (깜빡임 지원).";
     }
     else if (mode === 4) {
       // 4. 귀여운 눈웃음 (^ω^)
       for (let x = 22; x <= 48; x++) {
         let y = Math.round(29 - Math.sin((x - 22) / 26 * Math.PI) * 9);
-        setThickPixel(x, y);
+        setPixel(x, y - 1); setPixel(x, y); setPixel(x, y + 1);
       }
       for (let x = 79; x <= 105; x++) {
         let y = Math.round(29 - Math.sin((x - 79) / 26 * Math.PI) * 9);
-        setThickPixel(x, y);
+        setPixel(x, y - 1); setPixel(x, y); setPixel(x, y + 1);
       }
-      drawCatMouth(64, 42);
-      drawBlush(14, 32); drawBlush(106, 32);
+      drawCatMouth(64, 43);
+      // 안전 볼터치
+      drawSafeBlush(19, 36, false);
+      drawSafeBlush(99, 36, true);
       document.getElementById('syncSummaryText').innerText = "귀여운 눈웃음 표정을 보드에 주입합니다 (깜빡임 지원).";
     }
 
     renderOledGrid();
   }
-
-  function setThickPixel(x, y) {
-    for (let dy = -1; dy <= 1; dy++) {
-      for (let dx = 0; dx <= 1; dx++) {
-        if (x+dx >= 0 && x+dx < OLED_W && y+dy >= 0 && y+dy < OLED_H) oledGrid[y+dy][x+dx] = 1;
-      }
-    }
-  }
-
-  function drawFillCircle(cx, cy, r, color = 1) {
-    for (let y = -r; y <= r; y++) {
-      for (let x = -r; x <= r; x++) {
-        if (x*x + y*y <= r*r) {
-          let px = cx + x; let py = cy + y;
-          if (px >= 0 && px < OLED_W && py >= 0 && py < OLED_H) oledGrid[py][px] = color;
-        }
-      }
-    }
-  }
-
-  function drawCatMouth(cx, cy) {
-    for (let x = cx - 9; x <= cx - 1; x++) oledGrid[cy][x] = 1;
-    for (let x = cx + 1; x <= cx + 9; x++) oledGrid[cy][x] = 1;
-    oledGrid[cy-1][cx-9] = 1; oledGrid[cy-1][cx] = 1; oledGrid[cy-1][cx+9] = 1;
-    oledGrid[cy+1][cx-5] = 1; oledGrid[cy+1][cx+5] = 1;
-  }
-
-  function drawBlush(cx, cy) {
-    for (let i = 0; i < 3; i++) {
-      oledGrid[cy][cx + i*3] = 1;
-      oledGrid[cy-1][cx + i*3 + 1] = 1;
-      oledGrid[cy-2][cx + i*3 + 2] = 1;
-    }
-  }
-
-  // ---------------- [이미지 도트 변환] ----------------
-  function handleImageUpload(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = function(event) {
-      const img = new Image();
-      img.onload = function() {
-        uploadedImgObj = img;
-        activeAnimMode = 0; // 이미지 업로드 시 깜빡임 차단 모드
-        document.querySelectorAll('.preset-card').forEach(c => c.classList.remove('active'));
-        convertImageToDots();
-      };
-      img.src = event.target.result;
-    };
-    reader.readAsDataURL(file);
-  }
-
-  function reprocessUploadedImage() {
-    if (uploadedImgObj) convertImageToDots();
-  }
-
-  function convertImageToDots() {
-    if (!uploadedImgObj) return;
-    const threshold = parseInt(document.getElementById('thresholdSlider').value, 10);
-    const tempCanvas = document.createElement('canvas');
-    tempCanvas.width = OLED_W; tempCanvas.height = OLED_H;
-    const tempCtx = tempCanvas.getContext('2d');
-    tempCtx.fillStyle = '#000000'; tempCtx.fillRect(0, 0, OLED_W, OLED_H);
-
-    const scale = Math.min(OLED_W / uploadedImgObj.width, OLED_H / uploadedImgObj.height);
-    const w = uploadedImgObj.width * scale;
-    const h = uploadedImgObj.height * scale;
-    tempCtx.drawImage(uploadedImgObj, (OLED_W - w) / 2, (OLED_H - h) / 2, w, h);
-
-    const data = tempCtx.getImageData(0, 0, OLED_W, OLED_H).data;
-    for (let y = 0; y < OLED_H; y++) {
-      for (let x = 0; x < OLED_W; x++) {
-        const idx = (y * OLED_W + x) * 4;
-        let brightness = (0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2]);
-        if (data[idx + 3] < 128) brightness = 0;
-        oledGrid[y][x] = (brightness >= threshold) ? 1 : 0;
-      }
-    }
-    renderOledGrid();
-  }
-
-  function getFullOledBitmapHex() {
-    let hexArr = [];
-    for (let y = 0; y < OLED_H; y++) {
-      for (let byteCol = 0; byteCol < 16; byteCol++) {
-        let b = 0;
-        for (let bit = 0; bit < 8; bit++) {
-          let x = (byteCol * 8) + bit;
-          if (oledGrid[y][x]) b |= (1 << (7 - bit));
-        }
-        hexArr.push(b.toString(16).padStart(2, '0'));
-      }
-    }
-    return hexArr.join('');
-  }
-
-  // ---------------- [Web Serial 주입 전송] ----------------
-  async function sendFullCanvasToDevice() {
-    if (!("serial" in navigator)) {
-      alert("크롬 또는 엣지 브라우저에서 실행해 주세요.");
-      return;
-    }
-    try {
-      if (!activePort || !activePort.writable) {
-        activePort = await navigator.serial.requestPort();
-        await activePort.open({ baudRate: 115200 });
-        updateConnectionUI(true);
-      }
-
-      const timeEn = document.getElementById('toggleTime').checked ? "1" : "0";
-      const calEn  = document.getElementById('toggleCalendar').checked ? "1" : "0";
-      const overEn = document.getElementById('toggleOverlay').checked ? "1" : "0";
-      const fullHex = getFullOledBitmapHex();
-
-      // 프로토콜 규격: #FULLCFG:<TIME>:<CAL>:<OVERLAY>:<ANIM_MODE>:<2048HEX>\n
-      const payload = `#FULLCFG:${timeEn}:${calEn}:${overEn}:${activeAnimMode}:${fullHex}\n`;
-
-      const encoder = new TextEncoder();
-      const writer = activePort.writable.getWriter();
-      await writer.write(encoder.encode(payload));
-      writer.releaseLock();
-
-      alert("🎉 맞춤 표정 및 기능 설정이 성공적으로 주입되었습니다!");
-    } catch (err) {
-      console.error(err);
-      alert("주입 중 오류가 발생했습니다: " + err.message);
-      updateConnectionUI(false);
-    }
-  }
-
-  // 초기 로드: 기본 동글눈 프리셋
-  selectPresetFace(1);
-</script>
-</body>
-</html>
