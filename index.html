@@ -278,7 +278,7 @@
     <button class="tab-btn" onclick="openTab('tab-chat')" style="color: #38bdf8;">💬 메시지/채팅</button>
   </div>
 
-  <!-- [탭 1] 엔진 펌웨어 설치 및 기기 연동 (1단계/2단계 순서 최적화) -->
+  <!-- [탭 1] 엔진 펌웨어 설치 및 기기 연동 -->
   <div id="tab-flash" class="tab-content active">
     <h3 style="margin-bottom: 6px;">엔진 펌웨어 설치 및 기기 연동</h3>
     <p style="color: var(--muted); font-size: 13px;">
@@ -286,7 +286,6 @@
     </p>
 
     <div class="flash-action-grid">
-      <!-- 1단계: 펌웨어 다운로드 -->
       <div class="action-box">
         <h4>1단계: 펌웨어 다운로드</h4>
         <p>ESP Web Tools를 통해 보드에 최신 펌웨어를 먼저 굽습니다.</p>
@@ -294,8 +293,6 @@
           <esp-web-install-button manifest="./manifest.json"></esp-web-install-button>
         </div>
       </div>
-
-      <!-- 2단계: 기기 통신 연결 -->
       <div class="action-box">
         <h4>2단계: 기기 통신 연결</h4>
         <p>펌웨어 설치 완료 후, 맞춤 설정 및 표정 전송을 위한 시리얼 통신을 연결합니다.</p>
@@ -314,13 +311,10 @@
     </p>
 
     <div class="init-form-group">
-      <!-- 1. Wi-Fi SSID -->
       <div class="init-field">
         <label>Wi-Fi 이름 (SSID / 2.4GHz 필수)</label>
         <input type="text" id="initSsid" placeholder="예: MyHome_2.4G">
       </div>
-
-      <!-- 2. Wi-Fi 비밀번호 (토글) -->
       <div class="init-field">
         <label>Wi-Fi 비밀번호</label>
         <div style="position: relative; display: flex; align-items: center;">
@@ -330,8 +324,6 @@
           </button>
         </div>
       </div>
-
-      <!-- 3. 커플 연동 코드 -->
       <div class="init-field">
         <label>커플 연동 코드 (상대방 기기와 동일해야 함)</label>
         <div style="display: flex; gap: 8px;">
@@ -339,8 +331,6 @@
           <button onclick="generateRandomCode()" style="background: #334155; border: 1px solid var(--accent); color: var(--accent); padding: 0 14px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap;">🎲 랜덤 생성</button>
         </div>
       </div>
-
-      <!-- 4. 닉네임 입력 (영문 대문자 전용, 예시: KJH / JGE) -->
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
         <div class="init-field">
           <label>내 닉네임 (영문 대문자)</label>
@@ -354,13 +344,10 @@
       <p style="color: #38bdf8; font-size: 11px; margin-top: -6px;">
         ℹ️ 기기 상단 상태 표시줄에는 영문 폰트만 지원되므로 영문 대문자만 입력 가능합니다.
       </p>
-
-      <!-- 5. D-DAY 시작일 (연도 4자리 제한) -->
       <div class="init-field">
         <label>D-DAY 시작일</label>
         <input type="date" id="initDate" min="1900-01-01" max="2099-12-31" onchange="validateYearLength(this)">
       </div>
-
       <button class="btn-init-send" onclick="sendSystemInitToDevice()">
         ⚡ 기기에 초기 설정 전송 및 Wi-Fi 재연결
       </button>
@@ -378,7 +365,7 @@
     </table>
   </div>
 
-  <!-- [탭 4] 표정 선택 및 제작 -->
+  <!-- [탭 4] 표정 선택 및 제작 (★ 픽셀화 예시 체험 기능 추가) -->
   <div id="tab-face" class="tab-content">
     <div class="face-category-tabs">
       <button class="cat-btn active" id="btnCatPreset" onclick="switchFaceCategory('preset')">
@@ -387,6 +374,21 @@
       <button class="cat-btn" id="btnCatCustom" onclick="switchFaceCategory('custom')">
         🎨 직접 그리기 & PNG (고정)
       </button>
+    </div>
+
+    <!-- 🌟 픽셀화 체험을 위한 예시 캐릭터 선택 바 -->
+    <div style="background: #0f172a; border: 1px solid var(--border); border-radius: 12px; padding: 12px; margin-bottom: 16px;">
+      <p style="font-size: 12px; font-weight: 700; color: var(--accent); margin-bottom: 8px;">
+        💡 픽셀화 기능 체험하기 (예시 캐릭터를 눌러보세요!)
+      </p>
+      <div style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px;">
+        <button onclick="loadSamplePixelImage('01_cat.png')" style="background: #1e293b; border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; color: #fff; font-size: 11px; cursor: pointer; white-space: nowrap;">🐱 고양이</button>
+        <button onclick="loadSamplePixelImage('02_bunny.png')" style="background: #1e293b; border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; color: #fff; font-size: 11px; cursor: pointer; white-space: nowrap;">🐰 토끼</button>
+        <button onclick="loadSamplePixelImage('03_ghost.png')" style="background: #1e293b; border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; color: #fff; font-size: 11px; cursor: pointer; white-space: nowrap;">👻 유령</button>
+        <button onclick="loadSamplePixelImage('04_chick.png')" style="background: #1e293b; border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; color: #fff; font-size: 11px; cursor: pointer; white-space: nowrap;">🐥 병아리</button>
+        <button onclick="loadSamplePixelImage('05_frog.png')" style="background: #1e293b; border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; color: #fff; font-size: 11px; cursor: pointer; white-space: nowrap;">🐸 개구리</button>
+        <button onclick="loadSamplePixelImage('06_cloud.png')" style="background: #1e293b; border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; color: #fff; font-size: 11px; cursor: pointer; white-space: nowrap;">☁️ 구름</button>
+      </div>
     </div>
 
     <!-- 깜빡임 지원 프리셋 5종 그리드 -->
@@ -460,7 +462,7 @@
     </div>
   </div>
 
-  <!-- [탭 5] 기능 설정 (상단: 초기 화면 오버레이 / 중단: 버튼 조작 / 하단: 야간 취침 모드) -->
+  <!-- [탭 5] 기능 설정 -->
   <div id="tab-feature" class="tab-content">
     <h3 style="margin-bottom: 6px;">기능 및 디스플레이 커스텀</h3>
     <p style="color: var(--muted); font-size: 13px; margin-bottom: 18px;">
@@ -473,8 +475,6 @@
         <h4>🖥️ 초기 화면 (아이들 표정) 오버레이</h4>
         <span>상/하단 레이어 정보 개별 제어</span>
       </div>
-
-      <!-- 1. 시간 표시 토글 -->
       <div class="toggle-row">
         <div class="toggle-info">
           <h4>상단 중앙 시간 표시</h4>
@@ -485,8 +485,6 @@
           <span class="slider"></span>
         </label>
       </div>
-
-      <!-- 1-1. 12시간제 vs 24시간제 선택 -->
       <div class="sub-option-box" id="boxTimeFormat">
         <span style="font-size: 12px; color: var(--text); font-weight: 600;">시간 표시 방식</span>
         <div style="display: flex; gap: 14px; font-size: 12px;">
@@ -498,8 +496,6 @@
           </label>
         </div>
       </div>
-
-      <!-- 2. 좌측 하단 오늘 날짜 토글 -->
       <div class="toggle-row">
         <div class="toggle-info">
           <h4>좌측 하단 오늘 날짜</h4>
@@ -510,8 +506,6 @@
           <span class="slider"></span>
         </label>
       </div>
-
-      <!-- 3. 우측 하단 D-Day 토글 -->
       <div class="toggle-row" style="border-bottom: none;">
         <div class="toggle-info">
           <h4>우측 하단 D-DAY 표시</h4>
@@ -530,7 +524,6 @@
         <h4>🔘 버튼 조작 & 화면 모드 전환 제어</h4>
         <span>스위치 클릭 시 넘어가는 화면 제어</span>
       </div>
-
       <div class="toggle-row">
         <div class="toggle-info">
           <h4>화면 자동 복귀 (Auto-Return)</h4>
@@ -541,7 +534,6 @@
           <span class="slider"></span>
         </label>
       </div>
-
       <div class="toggle-row">
         <div class="toggle-info">
           <h4>전체화면 시계 모드</h4>
@@ -552,7 +544,6 @@
           <span class="slider"></span>
         </label>
       </div>
-
       <div class="toggle-row" style="border-bottom: none;">
         <div class="toggle-info">
           <h4>전체화면 캘린더 모드</h4>
@@ -565,13 +556,12 @@
       </div>
     </div>
 
-    <!-- [하단 섹션] 🌙 야간 자동 절전 (취침 모드) 설정 -->
+    <!-- [하단 섹션] 야간 자동 절전 (취침 모드) 설정 -->
     <div class="feature-section" style="margin-bottom: 0;">
       <div class="feature-section-header">
         <h4>🌙 야간 자동 절전 (취침 모드)</h4>
         <span>수면 중 눈부심 및 OLED 번인 방지</span>
       </div>
-
       <div class="toggle-row" style="border-bottom: none;">
         <div class="toggle-info">
           <h4>취침 시간 화면 자동 끄기</h4>
@@ -582,8 +572,6 @@
           <span class="slider"></span>
         </label>
       </div>
-
-      <!-- 취침 시각 / 기상 시각 입력 박스 -->
       <div class="sub-option-box" id="boxSleepTime" style="opacity: 0.4; pointer-events: none; flex-wrap: wrap; gap: 10px;">
         <div style="display: flex; align-items: center; gap: 8px;">
           <span style="font-size: 12px; color: var(--accent); font-weight: 700;">💤 취침 시각</span>
@@ -607,14 +595,12 @@
       상대방 DeskPet과 실시간으로 주고받은 편지 내역입니다.
     </p>
 
-    <!-- 대화 메시지 로그 뷰어 (애플 감성 캡슐 스크롤바) -->
     <div id="chatHistoryBox">
       <div style="text-align: center; color: var(--muted); font-size: 11px;">
         💡 2번 탭에서 커플 코드와 닉네임을 설정한 뒤 전송하면 대화 내역이 실시간 기록됩니다.
       </div>
     </div>
 
-    <!-- 메시지 입력창 -->
     <div class="init-form-group">
       <div style="display: flex; gap: 8px;">
         <input type="text" id="chatInputMsg" placeholder="상대방에게 보낼 메시지 입력 (한글/영문 지원)" style="flex: 1; padding: 12px 14px; background: #0f172a; border: 1px solid var(--border); border-radius: 10px; color: #fff; font-size: 13px;" onkeypress="if(event.keyCode===13) sendDeskPetMessage()">
@@ -622,7 +608,6 @@
           전송 🚀
         </button>
       </div>
-
       <div style="margin-top: 10px;">
         <label style="font-size: 12px; font-weight: 700; color: var(--accent);">💖 즉시 반응 보내기</label>
         <div class="chat-action-grid">
@@ -655,7 +640,6 @@
     event.currentTarget.classList.add('active');
     document.getElementById(tabId).classList.add('active');
 
-    // 4번(표정), 5번(기능 설정) 탭에서만 주입 카드 노출
     const syncCard = document.getElementById('syncCard');
     if (tabId === 'tab-face' || tabId === 'tab-feature') syncCard.style.display = 'block';
     else syncCard.style.display = 'none';
@@ -860,9 +844,8 @@
 
     if (x >= 0 && x < OLED_W && y >= 0 && y < OLED_H) {
       if (isLayerGuideOn && (y < 10 || y >= 54)) {
-        return; // 상하단 영역 수정 차단
+        return;
       }
-
       oledGrid[y][x] = (currentTool === 'pen') ? 1 : 0;
       renderOledGrid();
 
@@ -898,6 +881,26 @@
       }
     }
     renderOledGrid();
+  }
+
+  // 🌟 [추가] 예시 캐릭터 선택 시 즉시 픽셀화하여 캔버스에 띄워주는 함수
+  function loadSamplePixelImage(filename) {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = function() {
+      uploadedImgObj = img;
+      activeAnimMode = 0; // 커스텀 고정 모드 전환
+      document.querySelectorAll('.preset-card').forEach(c => c.classList.remove('active'));
+      
+      document.getElementById('thresholdSlider').value = 128;
+      convertImageToDots();
+
+      document.getElementById('syncSummaryText').innerText = `[${filename}] 예시 캐릭터의 128x64 고정 화면을 보드에 주입합니다.`;
+    };
+    img.onerror = function() {
+      alert("예시 이미지 파일을 찾을 수 없습니다. 웹 서버 경로에 해당 파일이 있는지 확인해 주세요.");
+    };
+    img.src = filename;
   }
 
   // ---------------- [U8g2 1:1 그래픽 동기화 래스터라이저] ----------------
@@ -981,7 +984,6 @@
     if (x >= 0 && x < OLED_W && y >= 0 && y < OLED_H) oledGrid[y][x] = color;
   }
 
-  // 4점 별빛 눈 래스터라이저 (🤩 이모지 스타일)
   function drawStarEye(cx, cy) {
     const starWidths = [9, 8, 6, 4, 3, 2, 2, 1, 1, 0];
     for (let dy = -9; dy <= 9; dy++) {
@@ -1024,16 +1026,13 @@
     else if (mode === 3) {
       drawStarEye(35, 29);
       drawStarEye(92, 29);
-
       for (let x = 58; x <= 70; x++) setPixel(x, 39);
       for (let y = 40; y <= 43; y++) {
         for (let x = 59; x <= 69; x++) setPixel(x, y);
       }
       for (let x = 61; x <= 67; x++) setPixel(x, 44);
-
       drawSafeBlush(22, 34, false);
       drawSafeBlush(98, 34, true);
-
       document.getElementById('syncSummaryText').innerText = "상큼한 표정(별빛 눈)을 보드에 주입합니다 (깜빡임 지원).";
     }
     else if (mode === 4) {
@@ -1161,18 +1160,14 @@
         updateConnectionUI(true);
       }
 
-      // 1. 상단 초기 화면 옵션들
       const showTime = document.getElementById('toggleShowTime').checked ? "1" : "0";
-      const timeFmt  = document.querySelector('input[name="timeFormat"]:checked').value; // "12" or "24"
+      const timeFmt  = document.querySelector('input[name="timeFormat"]:checked').value;
       const showDate = document.getElementById('toggleShowDate').checked ? "1" : "0";
       const showDDay = document.getElementById('toggleShowDDay').checked ? "1" : "0";
-
-      // 2. 중단 모드 전환 옵션들
       const clkMode = document.getElementById('toggleClkMode').checked ? "1" : "0";
       const calMode = document.getElementById('toggleCalMode').checked ? "1" : "0";
       const autoRet = document.getElementById('toggleAutoReturn').checked ? "1" : "0";
 
-      // 3. 하단 야간 취침 모드 옵션들 (HHMM 정수 변환)
       const sleepEn = document.getElementById('toggleSleepMode').checked ? "1" : "0";
       const sStartRaw = document.getElementById('inputSleepStart').value || "23:00";
       const sEndRaw   = document.getElementById('inputSleepEnd').value || "07:00";
@@ -1181,8 +1176,6 @@
 
       const fullHex = getFullOledBitmapHex();
 
-      // 확장 프로토콜 (총 12개 필드):
-      // #FULLCFG:<TIME_EN>:<TIME_FMT>:<DATE_EN>:<DDAY_EN>:<CLK_EN>:<CAL_EN>:<AUTORET>:<ANIM_MODE>:<SLEEP_EN>:<SLEEP_START>:<SLEEP_END>:<2048HEX>\n
       const payload = `#FULLCFG:${showTime}:${timeFmt}:${showDate}:${showDDay}:${clkMode}:${calMode}:${autoRet}:${activeAnimMode}:${sleepEn}:${sleepStart}:${sleepEnd}:${fullHex}\n`;
 
       const encoder = new TextEncoder();
@@ -1190,7 +1183,7 @@
       await writer.write(encoder.encode(payload));
       writer.releaseLock();
 
-      alert("🎉 맞춤 표정 및 취침 절전 설정이 성공적으로 주입되었습니다!");
+      alert("🎉 맞춤 표정 및 세부 기능 설정이 성공적으로 주입되었습니다!");
     } catch (err) {
       console.error(err);
       alert("주입 중 오류가 발생했습니다: " + err.message);
