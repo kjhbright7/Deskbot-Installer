@@ -200,7 +200,7 @@
     }
     .btn-chat-cmd:hover { border-color: var(--accent); transform: translateY(-2px); }
 
-    /* ★ 애플 감성 플로팅 초슬림 캡슐 스크롤바 */
+    /* 애플 감성 플로팅 초슬림 캡슐 스크롤바 */
     #chatHistoryBox {
       height: 240px;
       background: #0b1120;
@@ -326,7 +326,7 @@
         <div style="position: relative; display: flex; align-items: center;">
           <input type="password" id="initPass" placeholder="Wi-Fi 암호 입력 (없을 경우 비워둠)" style="padding-right: 42px;">
           <button type="button" onclick="togglePasswordVisibility()" style="position: absolute; right: 8px; background: transparent; border: none; font-size: 16px; cursor: pointer; color: var(--muted); padding: 4px;" title="암호 보기/숨기기">
-            <span id="eyeIcon">🔍</span>
+            <span id="eyeIcon">👁️</span>
           </button>
         </div>
       </div>
@@ -460,11 +460,11 @@
     </div>
   </div>
 
-  <!-- [탭 5] 기능 설정 (상단: 초기 화면 오버레이 커스텀 / 하단: 버튼 인터랙션 제어) -->
+  <!-- [탭 5] 기능 설정 (상단: 초기 화면 오버레이 / 중단: 버튼 조작 / 하단: 야간 취침 모드) -->
   <div id="tab-feature" class="tab-content">
     <h3 style="margin-bottom: 6px;">기능 및 디스플레이 커스텀</h3>
     <p style="color: var(--muted); font-size: 13px; margin-bottom: 18px;">
-      초기 화면에 띄울 정보들과 스위치 클릭 시 작동할 모드를 자유롭게 제어합니다.
+      초기 화면에 띄울 정보들과 스위치 동작 및 취침 절전 모드를 자유롭게 제어합니다.
     </p>
 
     <!-- [상단 섹션] 초기 화면 오버레이 설정 -->
@@ -486,7 +486,7 @@
         </label>
       </div>
 
-      <!-- 1-1. 12시간제 vs 24시간제 선택 (시간 표시 ON일 때만 활성화) -->
+      <!-- 1-1. 12시간제 vs 24시간제 선택 -->
       <div class="sub-option-box" id="boxTimeFormat">
         <span style="font-size: 12px; color: var(--text); font-weight: 600;">시간 표시 방식</span>
         <div style="display: flex; gap: 14px; font-size: 12px;">
@@ -503,7 +503,7 @@
       <div class="toggle-row">
         <div class="toggle-info">
           <h4>좌측 하단 오늘 날짜</h4>
-          <p>초기 화면 좌측 하단에 오늘의 날짜(26.10.22)를 표시합니다</p>
+          <p>초기 화면 좌측 하단에 오늘의 날짜(26.10.27)를 표시합니다</p>
         </div>
         <label class="switch">
           <input type="checkbox" id="toggleShowDate" checked>
@@ -524,14 +524,13 @@
       </div>
     </div>
 
-    <!-- [하단 섹션] 버튼 인터랙션 및 화면 전환 설정 -->
+    <!-- [중단 섹션] 버튼 인터랙션 및 화면 전환 설정 -->
     <div class="feature-section">
       <div class="feature-section-header">
         <h4>🔘 버튼 조작 & 화면 모드 전환 제어</h4>
         <span>스위치 클릭 시 넘어가는 화면 제어</span>
       </div>
 
-      <!-- 자동 복귀 토글 -->
       <div class="toggle-row">
         <div class="toggle-info">
           <h4>화면 자동 복귀 (Auto-Return)</h4>
@@ -543,7 +542,6 @@
         </label>
       </div>
 
-      <!-- 전체화면 시계 모드 허용 -->
       <div class="toggle-row">
         <div class="toggle-info">
           <h4>전체화면 시계 모드</h4>
@@ -555,7 +553,6 @@
         </label>
       </div>
 
-      <!-- 전체화면 달력 모드 허용 -->
       <div class="toggle-row" style="border-bottom: none;">
         <div class="toggle-info">
           <h4>전체화면 캘린더 모드</h4>
@@ -567,9 +564,40 @@
         </label>
       </div>
     </div>
+
+    <!-- [하단 섹션] 🌙 야간 자동 절전 (취침 모드) 설정 -->
+    <div class="feature-section" style="margin-bottom: 0;">
+      <div class="feature-section-header">
+        <h4>🌙 야간 자동 절전 (취침 모드)</h4>
+        <span>수면 중 눈부심 및 OLED 번인 방지</span>
+      </div>
+
+      <div class="toggle-row" style="border-bottom: none;">
+        <div class="toggle-info">
+          <h4>취침 시간 화면 자동 끄기</h4>
+          <p>지정된 시간에 화면을 끄고, 버튼을 누르면 5초간 화면이 켜집니다</p>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="toggleSleepMode" onchange="toggleSleepTimeUI()">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <!-- 취침 시각 / 기상 시각 입력 박스 -->
+      <div class="sub-option-box" id="boxSleepTime" style="opacity: 0.4; pointer-events: none; flex-wrap: wrap; gap: 10px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 12px; color: var(--accent); font-weight: 700;">💤 취침 시각</span>
+          <input type="time" id="inputSleepStart" value="23:00" style="background: #0f172a; border: 1px solid var(--border); color: #fff; padding: 6px 10px; border-radius: 6px; font-size: 12px;">
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 12px; color: var(--green); font-weight: 700;">☀️ 기상 시각</span>
+          <input type="time" id="inputSleepEnd" value="07:00" style="background: #0f172a; border: 1px solid var(--border); color: #fff; padding: 6px 10px; border-radius: 6px; font-size: 12px;">
+        </div>
+      </div>
+    </div>
   </div>
 
-  <!-- [탭 6] 💬 실시간 메시지/채팅 탭 (애플 스타일 스크롤바 적용) -->
+  <!-- [탭 6] 💬 실시간 메시지/채팅 탭 -->
   <div id="tab-chat" class="tab-content">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
       <h3 style="margin:0;">💬 실시간 메시지 대화방</h3>
@@ -632,7 +660,6 @@
     if (tabId === 'tab-face' || tabId === 'tab-feature') syncCard.style.display = 'block';
     else syncCard.style.display = 'none';
 
-    // 6번 채팅 탭 클릭 시 자동으로 MQTT 웹소켓 연결
     if (tabId === 'tab-chat') {
       initMqttChat();
     }
@@ -655,7 +682,7 @@
       btnPreset.classList.remove('active');
       secPreset.style.display = 'none';
       secNotice.style.display = 'block';
-      activeAnimMode = 0; // 커스텀 모드 고정
+      activeAnimMode = 0;
       document.querySelectorAll('.preset-card').forEach(c => c.classList.remove('active'));
       document.getElementById('syncSummaryText').innerText = "사용자가 디자인한 128x64 고정 화면을 보드에 주입합니다 (깜빡임 없음).";
     }
@@ -717,7 +744,7 @@
       eyeIcon.innerText = '🔒';
     } else {
       passInput.type = 'password';
-      eyeIcon.innerText = '🔍';
+      eyeIcon.innerText = '👁️';
     }
   }
 
@@ -857,7 +884,7 @@
   }
 
   function invertOledCanvas() {
-    activeAnimMode = 0; // 반전 시 즉각 커스텀 모드로 전환
+    activeAnimMode = 0;
     document.querySelectorAll('.preset-card').forEach(c => c.classList.remove('active'));
     document.getElementById('syncSummaryText').innerText = "반전된 128x64 고정 화면을 보드에 주입합니다 (깜빡임 없음).";
 
@@ -963,7 +990,6 @@
         setPixel(cx + dx, cy + dy, 1);
       }
     }
-    // 대각선 보조 스파클 포인트
     setPixel(cx - 5, cy - 5, 1);
     setPixel(cx + 5, cy - 5, 1);
     setPixel(cx - 5, cy + 5, 1);
@@ -980,7 +1006,6 @@
     });
 
     if (mode === 1) {
-      // 1. 기본 동글눈
       drawU8g2Disc(35, 29, 12, 1);
       drawU8g2Disc(92, 29, 12, 1);
       drawU8g2Disc(31, 25, 4, 0);
@@ -991,32 +1016,27 @@
       document.getElementById('syncSummaryText').innerText = "기본 동글눈 표정을 보드에 주입합니다 (깜빡임 지원).";
     }
     else if (mode === 2) {
-      // 2. 하찮은 멍
       drawU8g2Disc(34, 28, 4, 1);
       drawU8g2Disc(93, 28, 4, 1);
       for (let x = 60; x <= 68; x++) { setPixel(x, 40); setPixel(x, 41); }
       document.getElementById('syncSummaryText').innerText = "하찮은 멍 표정을 보드에 주입합니다 (깜빡임 지원).";
     }
     else if (mode === 3) {
-      // 3. 상큼한 표정 (🤩 반짝이는 별빛 눈 + 활짝 웃는 미소)
       drawStarEye(35, 29);
       drawStarEye(92, 29);
 
-      // 시원하고 밝게 벌린 D자형 미소 입
       for (let x = 58; x <= 70; x++) setPixel(x, 39);
       for (let y = 40; y <= 43; y++) {
         for (let x = 59; x <= 69; x++) setPixel(x, y);
       }
       for (let x = 61; x <= 67; x++) setPixel(x, 44);
 
-      // 볼터치
       drawSafeBlush(22, 34, false);
       drawSafeBlush(98, 34, true);
 
       document.getElementById('syncSummaryText').innerText = "상큼한 표정(별빛 눈)을 보드에 주입합니다 (깜빡임 지원).";
     }
     else if (mode === 4) {
-      // 4. 귀여운 눈웃음
       for (let x = 22; x <= 48; x++) {
         let y = Math.round(27 - Math.sin((x - 22) / 26 * Math.PI) * 9);
         setPixel(x, y - 1); setPixel(x, y); setPixel(x, y + 1);
@@ -1031,7 +1051,6 @@
       document.getElementById('syncSummaryText').innerText = "귀여운 눈웃음 표정을 보드에 주입합니다 (깜빡임 지원).";
     }
     else if (mode === 5) {
-      // 5. 클래식 냥이
       drawRBox(22, 15, 28, 29, 12, 1);
       drawRBox(78, 15, 28, 29, 12, 1);
       drawU8g2Disc(29, 22, 6, 0);
@@ -1123,6 +1142,13 @@
     box.style.pointerEvents = isTimeOn ? 'auto' : 'none';
   }
 
+  function toggleSleepTimeUI() {
+    const isSleepOn = document.getElementById('toggleSleepMode').checked;
+    const box = document.getElementById('boxSleepTime');
+    box.style.opacity = isSleepOn ? '1' : '0.4';
+    box.style.pointerEvents = isSleepOn ? 'auto' : 'none';
+  }
+
   async function sendFullCanvasToDevice() {
     if (!("serial" in navigator)) {
       alert("크롬 또는 엣지 브라우저에서 실행해 주세요.");
@@ -1135,28 +1161,36 @@
         updateConnectionUI(true);
       }
 
-      // 상단 초기 화면 옵션들
+      // 1. 상단 초기 화면 옵션들
       const showTime = document.getElementById('toggleShowTime').checked ? "1" : "0";
-      const timeFmt  = document.querySelector('input[name="timeFormat"]:checked').value; // "12" 또는 "24"
+      const timeFmt  = document.querySelector('input[name="timeFormat"]:checked').value; // "12" or "24"
       const showDate = document.getElementById('toggleShowDate').checked ? "1" : "0";
       const showDDay = document.getElementById('toggleShowDDay').checked ? "1" : "0";
 
-      // 하단 모드 전환 옵션들
+      // 2. 중단 모드 전환 옵션들
       const clkMode = document.getElementById('toggleClkMode').checked ? "1" : "0";
       const calMode = document.getElementById('toggleCalMode').checked ? "1" : "0";
       const autoRet = document.getElementById('toggleAutoReturn').checked ? "1" : "0";
 
+      // 3. 하단 야간 취침 모드 옵션들 (HHMM 정수 변환)
+      const sleepEn = document.getElementById('toggleSleepMode').checked ? "1" : "0";
+      const sStartRaw = document.getElementById('inputSleepStart').value || "23:00";
+      const sEndRaw   = document.getElementById('inputSleepEnd').value || "07:00";
+      const sleepStart = sStartRaw.replace(':', '');
+      const sleepEnd   = sEndRaw.replace(':', '');
+
       const fullHex = getFullOledBitmapHex();
 
-      // 확장 프로토콜: #FULLCFG:<TIME_EN>:<TIME_FMT>:<DATE_EN>:<DDAY_EN>:<CLK_EN>:<CAL_EN>:<AUTORET>:<ANIM_MODE>:<2048HEX>\n
-      const payload = `#FULLCFG:${showTime}:${timeFmt}:${showDate}:${showDDay}:${clkMode}:${calMode}:${autoRet}:${activeAnimMode}:${fullHex}\n`;
+      // 확장 프로토콜 (총 12개 필드):
+      // #FULLCFG:<TIME_EN>:<TIME_FMT>:<DATE_EN>:<DDAY_EN>:<CLK_EN>:<CAL_EN>:<AUTORET>:<ANIM_MODE>:<SLEEP_EN>:<SLEEP_START>:<SLEEP_END>:<2048HEX>\n
+      const payload = `#FULLCFG:${showTime}:${timeFmt}:${showDate}:${showDDay}:${clkMode}:${calMode}:${autoRet}:${activeAnimMode}:${sleepEn}:${sleepStart}:${sleepEnd}:${fullHex}\n`;
 
       const encoder = new TextEncoder();
       const writer = activePort.writable.getWriter();
       await writer.write(encoder.encode(payload));
       writer.releaseLock();
 
-      alert("🎉 맞춤 표정 및 세부 기능 설정이 성공적으로 주입되었습니다!");
+      alert("🎉 맞춤 표정 및 취침 절전 설정이 성공적으로 주입되었습니다!");
     } catch (err) {
       console.error(err);
       alert("주입 중 오류가 발생했습니다: " + err.message);
